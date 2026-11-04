@@ -478,7 +478,7 @@
       ${reflectHtml}
       <p class="count" id="post-count" aria-live="polite"></p>
       <div class="btn-row">
-        <button type="button" class="btn primary" id="next-btn">${isLast ? "Finish" : "Next scenario"}</button>
+        <button type="button" class="btn primary" id="next-btn">${isLast ? "Finish" : "Next scene"}</button>
       </div>`;
 
     const update = () => {
@@ -538,38 +538,85 @@
     return (data.scenarios[i].trigger.anyFlags || []).some((f) => (c.flags || []).includes(f));
   }
 
+  // ---------- path model ----------
+  // The scenes this player went through, in order, with what caused each echo or
+  // consequence and what each choice led to; plus consequence scenes they never reached.
+  function pathModel() {
+    const steps = activeIndexes().map((i) => {
+      const s = data.scenarios[i];
+      const a = state.answers[s.id];
+      const c = a && a.locked ? choiceOf(s, a.choiceId) : null;
+      return { i, s, a, c, cause: triggerSource(i), echo: echoFor(i), ledTo: [] };
+    });
+    const byIndex = new Map(steps.map((st) => [st.i, st]));
+    for (const st of steps) {
+      if (st.echo) byIndex.get(st.echo.index)?.ledTo.push({ kind: "echo", step: st });
+      if (st.cause) byIndex.get(st.cause.index)?.ledTo.push({ kind: "consequence", step: st });
+    }
+    const notTaken = data.scenarios.map((s, i) => ({ s, i }))
+      .filter(({ s, i }) => isConsequence(s) && !isActive(i))
+      .map(({ s, i }) => ({
+        s,
+        triggers: data.scenarios.slice(0, i).flatMap((x) => x.choices
+          .filter((c) => (c.flags || []).some((f) => s.trigger.anyFlags.includes(f)))
+          .map((c) => ({ scene: x, choice: c }))),
+      }));
+    return { steps, notTaken };
+  }
+
   function renderFinish() {
     const counts = Object.fromEntries(RATINGS.map((r) => [r, 0]));
-    const rows = data.scenarios.map((s) => {
-      const a = state.answers[s.id];
-      const c = a && choiceOf(s, a.choiceId);
+    const { steps, notTaken } = pathModel();
+    const nodes = steps.map((st, n) => {
+      const { s, a, c } = st;
       if (c && a.done) counts[c.rating]++;
+      const conseq = isConsequence(s);
+      const led = st.ledTo.map((l) => l.kind === "consequence"
+        ? `<li class="led consequence-led">↳ Led to a consequence scene: <strong>${esc(l.step.s.title)}</strong></li>`
+        : `<li class="led">↳ Showed up later in <strong>${esc(l.step.s.stage)}</strong></li>`).join("");
       return `
-        <li class="finish-row">
-          <div class="finish-main">
-            <p class="eyebrow"><span class="stage-tag">${esc(s.stage)}</span></p>
+        <li class="path-node ${conseq ? "is-consequence" : ""} ${c ? `node-${esc(c.rating)}` : "node-open"}">
+          <span class="path-dot" aria-hidden="true"></span>
+          <div class="path-body">
+            <p class="eyebrow">${n + 1}. <span class="stage-tag ${conseq ? "consequence-tag" : ""}">${conseq ? "Consequence" : esc(s.stage)}</span></p>
             <p class="finish-title">${esc(s.title)}</p>
-            ${c ? `<p class="finish-choice">${esc(c.text)}</p>` : `<p class="finish-choice muted">Not answered yet</p>`}
-          </div>
-          <div class="finish-side">
-            ${c ? `<span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}</span>` : ""}
-            ${a?.done ? `<button type="button" class="btn small ghost" data-explore="${esc(s.id)}">Explore other choices</button>` : ""}
+            ${st.cause ? `<p class="cause small">Because in ${esc(st.cause.scene.stage)} you chose: <q>${esc(st.cause.choice.text)}</q></p>` : ""}
+            ${st.echo ? `<p class="cause small">Your ${esc(st.echo.scene.stage)} choice showed up here: ${esc(st.echo.text)}</p>` : ""}
+            ${c ? `<p class="finish-choice"><span class="label-sm">You chose</span> ${esc(c.text)}</p>` : `<p class="finish-choice muted">Not answered yet</p>`}
+            ${led ? `<ul class="led-list">${led}</ul>` : ""}
+            <div class="finish-side">
+              ${c ? `<span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}</span>` : ""}
+              ${a?.done ? `<button type="button" class="btn small ghost" data-explore="${esc(s.id)}">Explore other choices</button>` : ""}
+            </div>
           </div>
         </li>`;
     }).join("");
 
-    const allDone = completedCount() === data.scenarios.length;
+    const roads = notTaken.map(({ s, triggers }) => `
+      <li class="road">
+        <p class="finish-title">${esc(s.title)}</p>
+        <p class="hint">This scene would have appeared if you had chosen:</p>
+        <ul>${triggers.map((t) => `<li><strong>${esc(t.scene.stage)}:</strong> ${esc(t.choice.text)}</li>`).join("")}</ul>
+      </li>`).join("");
+
+    const allDone = firstIncompleteIndex(0) === -1;
     app.innerHTML = `
       <section class="card">
         <p class="eyebrow">${allDone ? "Finished" : "In progress"}</p>
-        <h2>${allDone ? `Nice work, ${esc(state.name || "writer")}.` : "Your choices so far"}</h2>
+        <h2>${allDone ? `Your path, ${esc(state.name || "writer")}` : "Your path so far"}</h2>
         <p>${allDone
-          ? "Here's every choice you made. Choices stay locked, but you can explore the feedback for the options you didn't pick. When you're ready, export your choices and reflections to submit."
-          : "You haven't finished every scenario yet."}</p>
+          ? `You went through ${plural(steps.length, "scene")}. Each one below shows what you chose and where that choice showed up later. Choices stay locked, but you can explore the options you didn't pick. When you're ready, export your path and reflections to submit.`
+          : "You haven't finished your path yet."}</p>
         <ul class="tally" aria-label="Your choices by rating">
           ${RATINGS.map((r) => `<li class="pill rating-${r}">${esc(ratingLabel(r))}: ${counts[r]}</li>`).join("")}
         </ul>
-        <ol class="finish-list">${rows}</ol>
+        <ol class="path" aria-label="The path you took">${nodes}</ol>
+        ${allDone && roads ? `
+          <div class="roads">
+            <h3 class="small-h">Roads not taken</h3>
+            <p class="hint">Consequence scenes you never reached, and the choices that would have led to them.</p>
+            <ul class="road-list">${roads}</ul>
+          </div>` : ""}
         <div class="export-box sticky-note">
           <p class="note-title">Export your work</p>
           <p>Your work lives only in this browser. Download or copy it to submit on Webcourses, or save it as a PDF.</p>
@@ -607,7 +654,7 @@
 
     app.innerHTML = `
       <article class="card">
-        <p class="eyebrow"><span class="stage-tag">${esc(s.stage)}</span> · Exploring</p>
+        <p class="eyebrow"><span class="stage-tag ${isConsequence(s) ? "consequence-tag" : ""}">${esc(stageName(s))}</span> · Exploring</p>
         <h2>${esc(s.title)}</h2>
         <p class="situation">${esc(s.situation)}</p>
         <p class="hint">Reading these doesn't change your recorded choice.</p>
@@ -618,26 +665,32 @@
 
   // ---------- export ----------
   function buildRecords() {
-    return data.scenarios.map((s, i) => {
-      const a = state.answers[s.id];
-      const c = a && choiceOf(s, a.choiceId);
+    const { steps, notTaken } = pathModel();
+    const records = steps.map((st, n) => {
+      const { s, a, c } = st;
       const log = c && c.usesAI ? logQuestionsFor(s).map((q, k) => ({ q, a: (a.log || [])[k] || "" })) : null;
-      return { n: i + 1, s, a, c, log };
+      return { ...st, n: n + 1, log };
     });
+    return { records, notTaken };
   }
 
+  const stageName = (s) => (isConsequence(s) ? "Consequence" : s.stage);
+
   function buildMarkdown() {
+    const { records, notTaken } = buildRecords();
     const lines = [];
-    lines.push(`# Should I Use AI Here? (v1)`);
+    lines.push(`# Should I Use AI Here? (v2)`);
     lines.push("");
     lines.push(`**Name:** ${state.name || "(not given)"}  `);
     lines.push(`**Started:** ${formatDate(state.startedAt)}  `);
     lines.push(`**Exported:** ${formatDate(new Date().toISOString())}  `);
-    lines.push(`**Completed:** ${completedCount()} of ${data.scenarios.length} scenarios`);
+    lines.push(`**Completed:** ${completedCount()} of ${pathLength()} scenes on my path`);
     lines.push("");
-    for (const { n, s, a, c, log } of buildRecords()) {
-      lines.push(`## ${n}. ${s.stage}: ${s.title}`);
+    for (const { n, s, a, c, log, cause, echo } of records) {
+      lines.push(`## ${n}. ${stageName(s)}: ${s.title}`);
       lines.push("");
+      if (cause) lines.push(`_This scene happened because in ${cause.scene.stage} I chose: "${cause.choice.text}"_`, "");
+      if (echo) lines.push(`_My earlier ${echo.scene.stage} choice showed up here: ${echo.text}_`, "");
       if (!c || !a?.locked) { lines.push("_Not answered yet._", ""); continue; }
       lines.push(`**My choice:** ${c.text}`);
       lines.push("");
@@ -651,6 +704,14 @@
         for (const { q, a: ans } of log) lines.push(`- *${q}* ${ans || "_(blank)_"}`);
       } else {
         lines.push(`**Reflection** (${s.postReflectPrompt || ""}): ${a.post || "_(blank)_"}`);
+      }
+      lines.push("");
+    }
+    if (notTaken.length && firstIncompleteIndex(0) === -1) {
+      lines.push(`## Roads not taken`);
+      lines.push("");
+      for (const { s, triggers } of notTaken) {
+        lines.push(`- **${s.title}** would have appeared if I had chosen: ${triggers.map((t) => `${t.scene.stage}: "${t.choice.text}"`).join("; or ")}`);
       }
       lines.push("");
     }
@@ -699,9 +760,12 @@
   }
 
   function renderPrint() {
-    const recs = buildRecords().map(({ n, s, a, c, log }) => `
+    const { records, notTaken } = buildRecords();
+    const recs = records.map(({ n, s, a, c, log, cause, echo }) => `
       <section class="print-item">
-        <h3>${n}. ${esc(s.stage)}: ${esc(s.title)}</h3>
+        <h3>${n}. ${esc(stageName(s))}: ${esc(s.title)}</h3>
+        ${cause ? `<p class="cause small">This scene happened because in ${esc(cause.scene.stage)} I chose: <q>${esc(cause.choice.text)}</q></p>` : ""}
+        ${echo ? `<p class="cause small">My earlier ${esc(echo.scene.stage)} choice showed up here: ${esc(echo.text)}</p>` : ""}
         ${!c || !a?.locked ? `<p><em>Not answered yet.</em></p>` : `
           <p><strong>My choice:</strong> ${esc(c.text)}</p>
           <p><strong>Rating:</strong> ${esc(ratingLabel(c.rating))} (${c.usesAI ? "uses AI" : "no AI"})</p>
@@ -710,6 +774,11 @@
             ? `<p><strong>Practice GenAI log entry</strong></p><dl>${log.map(({ q, a: ans }) => `<dt>${esc(q)}</dt><dd>${esc(ans) || "<em>(blank)</em>"}</dd>`).join("")}</dl>`
             : `<p><strong>Reflection</strong> <span class="muted">(${esc(s.postReflectPrompt || "")})</span></p><p>${esc(a.post) || "<em>(blank)</em>"}</p>`}`}
       </section>`).join("");
+    const roads = notTaken.length && firstIncompleteIndex(0) === -1 ? `
+      <section class="print-item">
+        <h3>Roads not taken</h3>
+        <ul>${notTaken.map(({ s, triggers }) => `<li><strong>${esc(s.title)}</strong> would have appeared if I had chosen: ${triggers.map((t) => `${esc(t.scene.stage)}: <q>${esc(t.choice.text)}</q>`).join("; or ")}</li>`).join("")}</ul>
+      </section>` : "";
 
     app.innerHTML = `
       <section class="card print-sheet">
@@ -717,12 +786,13 @@
           <button type="button" class="btn primary" data-action="print">Print / Save as PDF</button>
           <button type="button" class="btn ghost" data-action="to-finish">Back</button>
         </div>
-        <h2>Should I Use AI Here? (v1)</h2>
+        <h2>Should I Use AI Here? (v2)</h2>
         <p><strong>Name:</strong> ${esc(state.name || "(not given)")}<br>
            <strong>Started:</strong> ${esc(formatDate(state.startedAt))}<br>
            <strong>Printed:</strong> ${esc(formatDate(new Date().toISOString()))}<br>
-           <strong>Completed:</strong> ${completedCount()} of ${data.scenarios.length} scenarios</p>
+           <strong>Completed:</strong> ${completedCount()} of ${pathLength()} scenes on my path</p>
         ${recs}
+        ${roads}
       </section>`;
   }
 
