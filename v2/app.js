@@ -1,14 +1,20 @@
-/* Should I Use AI Here? (v1)
+/* Should I Use AI Here? (v2: consequences)
    Plain JS, no build step. Scenarios and policy load from data/*.json via fetch();
    each player's progress and reflections live in localStorage under STORE_KEY.
 
-   Flow per scenario: pick a choice -> write a "why" (PRE_MIN words) -> lock in ->
-   read feedback -> reflect or write a mock GenAI log entry (POST_MIN words) -> next. */
+   Flow per scene: pick a choice -> write a "why" (PRE_MIN words) -> lock in ->
+   read feedback -> reflect or write a mock GenAI log entry (POST_MIN words) -> next.
+
+   Consequences: choices carry "flags". A later scene can show an "echo" note when an
+   earlier choice set one of its ifFlags, and a scene with type "consequence" is only
+   played when an earlier choice set one of its trigger.anyFlags. Scenes play in array
+   order and answers lock in that order, so a scene's flags only ever come from scenes
+   before it and never change after the fact. */
 (() => {
   "use strict";
 
-  const VERSION = 1;
-  const STORE_KEY = "shouldIUseAI.v1";
+  const VERSION = 2;
+  const STORE_KEY = "shouldIUseAI.v2";
   const SCENARIOS_URL = "data/scenarios.json";
   const POLICY_URL = "data/policy.json";
   const PRE_MIN = 8;
@@ -117,16 +123,99 @@
         if (typeof c.feedback !== "string" || !c.feedback.trim()) errors.push(`${cw} is missing "feedback".`);
         if (typeof c.usesAI !== "boolean") errors.push(`${cw} needs "usesAI": true or false.`);
         if (!RATINGS.includes(c.rating)) errors.push(`${cw} has rating "${c.rating}"; use one of ${RATINGS.join(", ")}.`);
+        if (c.flags !== undefined && !isStringList(c.flags)) errors.push(`${cw} has "flags" that aren't a list of words.`);
       });
+      const type = s.type || "core";
+      if (!["core", "consequence"].includes(type)) errors.push(`${where} has type "${s.type}"; use "core" or "consequence".`);
+      if (type === "consequence") {
+        if (i === 0) errors.push(`${where} is a consequence scene, so it can't be first.`);
+        if (!s.trigger || !isStringList(s.trigger.anyFlags) || s.trigger.anyFlags.length === 0) {
+          errors.push(`${where} is a consequence scene and needs "trigger": { "anyFlags": [...] }.`);
+        }
+      }
+      if (s.echoes !== undefined) {
+        if (!Array.isArray(s.echoes)) errors.push(`${where} has "echoes" that isn't a list.`);
+        else s.echoes.forEach((e, k) => {
+          if (!e || !isStringList(e.ifFlags) || !e.ifFlags.length || typeof e.text !== "string" || !e.text.trim()) {
+            errors.push(`${where}, echo ${k + 1} needs "ifFlags" (a list) and "text".`);
+          }
+        });
+      }
     });
+    if (!errors.length) warnUnknownFlags(json.scenarios);
     return errors;
   }
+
+  function isStringList(x) {
+    return Array.isArray(x) && x.every((f) => typeof f === "string" && f.trim());
+  }
+
+  // A trigger or echo that names a flag no earlier choice sets can never fire. That's
+  // likely a typo, but it doesn't break play, so warn in the console instead of failing.
+  function warnUnknownFlags(scenarios) {
+    scenarios.forEach((s, i) => {
+      const earlier = new Set(scenarios.slice(0, i).flatMap((x) => x.choices.flatMap((c) => c.flags || [])));
+      const named = [...(s.trigger?.anyFlags || []), ...(s.echoes || []).flatMap((e) => e.ifFlags)];
+      for (const f of named) {
+        if (!earlier.has(f)) console.warn(`Scene "${s.id}" refers to flag "${f}", but no earlier choice sets it.`);
+      }
+    });
+  }
+
+  // ---------- consequences ----------
+  // Which flags were set by locked choices in active scenes before index i, and by what.
+  // Returns Map(flag -> { scene, choice }) keeping the earliest source of each flag.
+  function flagSourcesBefore(i) {
+    const sources = new Map();
+    for (let k = 0; k < i; k++) {
+      const s = data.scenarios[k];
+      const a = state.answers[s.id];
+      if (!a || !a.locked || !isActive(k)) continue;
+      const c = choiceOf(s, a.choiceId);
+      for (const f of c?.flags || []) if (!sources.has(f)) sources.set(f, { scene: s, choice: c, index: k });
+    }
+    return sources;
+  }
+
+  function isActive(i) {
+    const s = data.scenarios[i];
+    if (!s) return false;
+    if ((s.type || "core") !== "consequence") return true;
+    return Boolean(triggerSource(i));
+  }
+
+  // The earlier choice that triggered consequence scene i, or null if it isn't triggered.
+  function triggerSource(i) {
+    const s = data.scenarios[i];
+    if (!s || s.type !== "consequence") return null;
+    const sources = flagSourcesBefore(i);
+    for (const f of s.trigger.anyFlags) if (sources.has(f)) return { flag: f, ...sources.get(f) };
+    return null;
+  }
+
+  // The first echo on scene i whose flags were set earlier, with the choice that set it.
+  function echoFor(i) {
+    const s = data.scenarios[i];
+    if (!s || !Array.isArray(s.echoes)) return null;
+    const sources = flagSourcesBefore(i);
+    for (const e of s.echoes) {
+      const f = e.ifFlags.find((x) => sources.has(x));
+      if (f) return { text: e.text, flag: f, ...sources.get(f) };
+    }
+    return null;
+  }
+
+  const activeIndexes = () => data.scenarios.map((_, i) => i).filter(isActive);
+  const isConsequence = (s) => s.type === "consequence";
 
   // ---------- answer helpers ----------
   const scenarioAt = (i) => data.scenarios[i];
   const answerFor = (sid) => state.answers[sid] || (state.answers[sid] = { choiceId: null, pre: "", locked: false, post: "", log: [], done: false });
   const choiceOf = (s, cid) => s.choices.find((c) => c.id === cid) || null;
-  const completedCount = () => data.scenarios.filter((s) => state.answers[s.id]?.done).length;
+  const completedCount = () => activeIndexes().filter((i) => state.answers[data.scenarios[i].id]?.done).length;
+  // Scenes on this player's path so far: every core scene plus consequences already triggered.
+  const pathLength = () => activeIndexes().length;
+  const positionOf = (i) => activeIndexes().indexOf(i) + 1;
 
   function postWordCount(s, a) {
     const c = choiceOf(s, a.choiceId);
@@ -169,24 +258,25 @@
 
   function updateProgress() {
     const el = $("#progress");
-    if (view.name === "scenario") el.textContent = `Scenario ${state.currentIndex + 1} of ${data.scenarios.length}`;
-    else if (view.name === "finish" || view.name === "explore") el.textContent = `${completedCount()} of ${data.scenarios.length} done`;
+    if (view.name === "scenario") el.textContent = `Scene ${positionOf(state.currentIndex)} of ${pathLength()}`;
+    else if (view.name === "finish" || view.name === "explore") el.textContent = `${completedCount()} of ${pathLength()} done`;
     else el.textContent = "";
   }
 
   function renderStart() {
     const done = completedCount();
     const started = state.startedAt && (done > 0 || Object.keys(state.answers).length > 0);
-    const finished = done === data.scenarios.length;
+    const finished = firstIncompleteIndex(0) === -1;
     const summary = (data.policy?.summary || []).map((p) => `<p>${esc(p)}</p>`).join("");
-    const stages = data.scenarios.map((s) => `<li>${esc(s.stage)}</li>`).join("");
+    const stages = data.scenarios.filter((s) => !isConsequence(s)).map((s) => `<li>${esc(s.stage)}</li>`).join("");
 
     app.innerHTML = `
       <section class="card intro">
         <p class="eyebrow">ENC 1102 · A decision game</p>
         <h1>Should I Use AI Here?</h1>
-        <p class="lede">You'll face ${data.scenarios.length} real moments from a writing course. For each one, decide whether and how you'd use generative AI, explain why, and see how your choice plays out against the course policy.</p>
+        <p class="lede">You'll face ${data.scenarios.filter((s) => !isConsequence(s)).length} real moments from a writing course. For each one, decide whether and how you'd use generative AI, explain why, and see how your choice plays out against the course policy.</p>
         <ul class="stage-list" aria-label="Stages">${stages}</ul>
+        <p class="new-note"><strong>New in version 2:</strong> your choices follow you. Earlier decisions show up in later scenes, and some choices lead to extra scenes that only appear on certain paths. At the end you'll see the path you took.</p>
         <div class="sticky-note">
           <p class="note-title">From the course policy</p>
           ${summary}
@@ -207,7 +297,7 @@
           <p class="field-error" id="name-error" hidden>Please enter a name or initials.</p>
           <div class="btn-row">
             ${started && !finished
-              ? `<button type="submit" class="btn primary">Resume (scenario ${Math.min(state.currentIndex + 1, data.scenarios.length)} of ${data.scenarios.length})</button>
+              ? `<button type="submit" class="btn primary">Resume (scene ${positionOf(firstIncompleteIndex(0))} of ${pathLength()})</button>
                  <button type="button" class="btn ghost" data-action="reset">Start over</button>`
               : finished
               ? `<button type="button" class="btn primary" data-action="to-finish">See your choices</button>
@@ -230,6 +320,8 @@
       }
       state.name = name;
       if (!state.startedAt) state.startedAt = new Date().toISOString();
+      const next = firstIncompleteIndex(0);
+      if (next !== -1) state.currentIndex = next;
       save();
       setView({ name: "scenario" });
     });
@@ -237,10 +329,13 @@
 
   function renderScenario() {
     const s = scenarioAt(state.currentIndex);
-    if (!s) return setView({ name: "finish" });
+    if (!s || !isActive(state.currentIndex)) return setView({ name: "finish" });
     const a = answerFor(s.id);
-    const total = data.scenarios.length;
-    const pct = Math.round((state.currentIndex / total) * 100);
+    const total = pathLength();
+    const pos = positionOf(state.currentIndex) - 1;
+    const pct = Math.round((pos / total) * 100);
+    const cause = isConsequence(s) ? triggerSource(state.currentIndex) : null;
+    const echo = echoFor(state.currentIndex);
 
     const choicesHtml = s.choices.map((c, i) => {
       const checked = a.choiceId === c.id;
@@ -253,11 +348,16 @@
     }).join("");
 
     app.innerHTML = `
-      <div class="meter" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${state.currentIndex}"><span style="width:${pct}%"></span></div>
-      <article class="card scenario">
-        <p class="eyebrow"><span class="stage-tag">${esc(s.stage)}</span></p>
+      <div class="meter" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${pos}"><span style="width:${pct}%"></span></div>
+      <article class="card scenario ${cause ? "is-consequence" : ""}">
+        <p class="eyebrow"><span class="stage-tag ${cause ? "consequence-tag" : ""}">${cause ? "Consequence" : esc(s.stage)}</span></p>
         <h2 class="scenario-title">${esc(s.title)}</h2>
+        ${cause ? causeNoteHtml("This happened because", cause) : ""}
         ${s.assignment ? `<p class="assignment"><strong>Assignment:</strong> ${esc(s.assignment)}</p>` : ""}
+        ${echo ? `<aside class="echo-note" aria-label="How an earlier choice shows up here">
+            ${causeNoteHtml("Because", echo, true)}
+            <p>${esc(echo.text)}</p>
+          </aside>` : ""}
         <p class="situation">${esc(s.situation)}</p>
         ${s.learningGoal ? `<p class="goal"><strong>What's at stake for your learning:</strong> ${esc(s.learningGoal)}</p>` : ""}
         <fieldset class="choices" ${a.locked ? 'aria-describedby="locked-note"' : ""}>
@@ -331,6 +431,12 @@
     return window.matchMedia && window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   }
 
+  // "Because in Brainstorming you chose “…”" with the earlier choice quoted.
+  function causeNoteHtml(lead, src, inline = false) {
+    const body = `${esc(lead)} in <strong>${esc(src.scene.stage)}</strong> you chose: <q>${esc(src.choice.text)}</q>`;
+    return inline ? `<p class="cause cause-inline">${body}</p>` : `<p class="cause">${body}</p>`;
+  }
+
   function feedbackHtml(c) {
     return `
       <div class="rating-sticker rating-${esc(c.rating)}">
@@ -346,7 +452,8 @@
     const c = choiceOf(s, a.choiceId);
     if (!c) return;
     const isLog = c.usesAI && logQuestionsFor(s).length > 0;
-    const isLast = state.currentIndex >= data.scenarios.length - 1;
+    const isLast = !data.scenarios.some((_, i) => i > state.currentIndex && !isConsequence(data.scenarios[i])) &&
+      !data.scenarios.some((_, i) => i > state.currentIndex && isConsequence(data.scenarios[i]) && wouldTrigger(i, s, c));
     const qs = logQuestionsFor(s);
     if (!Array.isArray(a.log)) a.log = [];
 
@@ -402,7 +509,7 @@
       a.post = (a.post || "").trim();
       a.log = (a.log || []).map((t) => (t || "").trim());
       if (!a.done) { a.done = true; a.completedAt = new Date().toISOString(); }
-      const nextIdx = firstIncompleteIndex(state.currentIndex + 1);
+      const nextIdx = firstIncompleteIndex(0);
       if (nextIdx === -1) {
         state.currentIndex = data.scenarios.length;
         if (!state.finishedAt) state.finishedAt = new Date().toISOString();
@@ -416,13 +523,19 @@
     });
   }
 
+  // The first active scene (in path order) that isn't finished, or -1 when the path is done.
   function firstIncompleteIndex(from) {
-    const n = data.scenarios.length;
-    for (let k = 0; k < n; k++) {
-      const i = (from + k) % n;
-      if (!state.answers[data.scenarios[i].id]?.done) return i;
+    for (let i = from; i < data.scenarios.length; i++) {
+      if (isActive(i) && !state.answers[data.scenarios[i].id]?.done) return i;
     }
     return -1;
+  }
+
+  // Would consequence scene i be triggered once choice c in scene s counts? Used only to label
+  // the button "Finish" vs "Next" before the current answer is marked done.
+  function wouldTrigger(i, s, c) {
+    if (isActive(i)) return true;
+    return (data.scenarios[i].trigger.anyFlags || []).some((f) => (c.flags || []).includes(f));
   }
 
   function renderFinish() {
