@@ -11,12 +11,12 @@ Each version lives in its own folder and stays playable. The root `index.html` l
 | Folder | What it adds |
 | --- | --- |
 | `v1/` | MVP: 6 scenarios, graded feedback, required reflections, mock GenAI log entries, localStorage progress, export |
-| `v2/` | (planned) Branching consequences |
+| `v2/` | Consequences: earlier choices show up in later scenes, 3 consequence scenes that appear only on certain paths, and a path timeline end screen |
 | `v3/` | (planned) Scoring and AI-literacy pattern dimensions |
 | `v4/` | (planned) Full results screen |
 | `v5/` | (planned) Teacher mode for adding and editing scenarios |
 
-## How v1 plays
+## How it plays (v1 and v2)
 
 1. Enter a name or initials (saved only in your browser) and start.
 2. For each scenario, pick a choice and write one sentence about **why** (at least 8 words), then lock it in.
@@ -32,17 +32,36 @@ Each version lives in its own folder and stays playable. The root `index.html` l
 
 Choices are locked once made; exploring other options afterward doesn't change your record.
 
+## What v2 adds: consequences
+
+- **Echoes.** Some scenes look different because of an earlier choice. A note at the top says which choice caused it. For example, if AI picked your topic in Brainstorming, your Peer review partner asks why you care about it. The scene's choices and ratings stay the same, so every player's scenes can be compared.
+- **Consequence scenes.** Three extra scenes appear only on certain paths. Each is a full scene with rated choices, feedback, and reflection.
+  - *The source that wasn't there* comes after Citations if you used AI sources or citations without verifying them.
+  - *Pitch it in two minutes* comes after Peer review if you chose your own topic. It's a positive outcome.
+  - *The conference* comes last if AI writing went into your paper without a log entry.
+- **Your path.** The end screen is a timeline of every scene you played. It shows your choice, its rating, what each choice led to later, and why each consequence scene appeared. **Roads not taken** lists the consequence scenes you never reached and the choices that would have led to them. The export follows the same path.
+
+A full playthrough is 6 to 9 scenes depending on your choices.
+
 ## Your data
 
-Progress and reflections are stored in this browser's `localStorage` under a per-version key (`shouldIUseAI.v1` for v1), so versions don't overwrite each other. Nothing is sent anywhere. Clearing site data or switching browsers/devices loses progress, so export before you submit.
+Progress and reflections are stored in this browser's `localStorage` under a per-version key (`shouldIUseAI.v1`, `shouldIUseAI.v2`), so versions don't overwrite each other. Nothing is sent anywhere. Clearing site data or switching browsers/devices loses progress, so export before you submit.
 
 ## Editing scenarios
 
-Scenarios are in `v1/data/scenarios.json` and the course policy text is in `v1/data/policy.json`. Each scenario has a stage, assignment, situation, learning goal, reflection prompts, GenAI log questions, and four choices. Each choice has `text`, `usesAI`, `rating` (`transfers`, `works`, `shortcut`, or `line`), `feedback`, an optional `policyLink` and `ethicsNote`, and a `next` field reserved for branching in v2. The game checks the file when it loads and shows an error if something is missing.
+Each version has its own data: `v2/data/scenarios.json` and `v2/data/policy.json` for the current version (v1's are in `v1/data/`). Each scene has a stage, assignment, situation, learning goal, reflection prompts, GenAI log questions, and choices. Each choice has `text`, `usesAI`, `rating` (`transfers`, `works`, `shortcut`, or `line`), `feedback`, and an optional `policyLink` and `ethicsNote`.
+
+v2 adds three fields for consequences:
+
+- `flags` on a choice: short labels for what the choice means later, e.g. `["ai-topic"]`.
+- `echoes` on a scene: `[{ "ifFlags": ["ai-topic"], "text": "..." }]`. The first echo whose flag an earlier choice set is shown at the top of the scene.
+- `"type": "consequence"` with `"trigger": { "anyFlags": ["unverified-sources", "fabricated-citation"] }` on a scene: it plays only if an earlier choice set one of those flags. Place it in the list where it should appear.
+
+Scenes play in list order. The game checks the file when it loads and shows an error if something is missing. It also warns in the browser console if an echo or trigger names a flag no earlier choice sets, which is usually a typo.
 
 ## Running it
 
-On GitHub Pages: Settings → Pages → Deploy from a branch → choose the branch and the root folder. The landing page is at the site root and v1 is at `/v1/`.
+On GitHub Pages: Settings → Pages → Deploy from a branch → choose the branch and the root folder. The landing page is at the site root, with each version in its folder (`/v1/`, `/v2/`).
 
 Locally, `fetch()` needs a web server rather than `file://`:
 
