@@ -671,7 +671,7 @@
     return "Needs attention";
   }
 
-  const pointsText = (r) => `+${plural(pointsFor(r), "point")}`;
+  const pointsText = (r) => `${pointsFor(r) > 0 ? "+" : ""}${plural(pointsFor(r), "point")}`;
 
   // Points total, rating tally, and a bar per dimension (0-100%). Each bar's value is
   // written out as text beside it, so the bars themselves are decorative for screen readers.
@@ -686,7 +686,7 @@
             <span class="profile-value">${measured ? `${d.pct}% · ` : ""}${esc(d.band)}</span>
           </div>
           <div class="profile-track" aria-hidden="true" ${measured ? `title="${esc(d.label)}: ${d.pct}%"` : ""}>
-            ${measured ? `<span class="profile-fill" style="width:${d.pct}%"></span>` : ""}
+            ${measured && d.pct > 0 ? `<span class="profile-fill" style="width:${d.pct}%"></span>` : ""}
           </div>
           <p class="profile-desc">${d.description ? `${esc(d.description)} ` : ""}${esc(where)}</p>
         </li>`;
@@ -701,7 +701,7 @@
         </ul>
         <h3 class="small-h">Your profile</h3>
         <ul class="profile-chart" aria-label="Your profile across three patterns">${rows}</ul>
-        <p class="hint profile-note">This profile describes patterns in the choices you made in this playthrough. It isn't a grade. Each bar compares your choices with the best and weakest choices available in the scenes you played, so paths of different lengths compare fairly. Not using AI is never scored against you: every choice without AI earns full points and never scores below zero on a pattern.</p>
+        <p class="hint profile-note">This profile describes patterns in the choices you made in this playthrough. It isn't a grade. Each bar compares your choices with the best and weakest choices available in the scenes you played, so paths of different lengths compare fairly. Not using AI is never penalized: every choice without AI earns full points. The profile reflects what a choice did (for example, whether you re-checked your sources), not whether AI was involved.</p>
       </div>`;
   }
 

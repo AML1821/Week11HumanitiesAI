@@ -51,7 +51,7 @@ A full playthrough is 6 to 9 scenes depending on your choices.
   - *Verification*: you checked facts and sources yourself instead of trusting what AI handed you.
   - *Honest disclosure*: you were open about how you used AI (or chose not to) through your GenAI log.
 
-  The end screen shows a bar for each one. A bar compares your choices with the weakest and best choices available in the scenes you actually played, so a 6-scene path and a 9-scene path compare fairly. Not using AI is never scored against you: every no-AI choice earns full points and never scores below zero.
+  The end screen shows a bar for each one. A bar compares your choices with the weakest and best choices available in the scenes you actually played, so a 6-scene path and a 9-scene path compare fairly. Not using AI is never penalized: every no-AI choice earns full points, and the profile reflects what a choice did (for example, re-checking sources), not whether AI was involved.
 - **Scene variants.** A scene can change its situation and the wording of individual choices based on an earlier choice. If AI picked your topic in Brainstorming, the Research scene now names that AI-suggested topic instead of food insecurity.
 - **Clearer Pitch rating.** In *Pitch it in two minutes*, the slide-deck choice now says exactly what earns its *Works* rating (you rewrite the speaker notes, cut slides, and log it), and the feedback explains why it's *Works* rather than *Transfers well*.
 - The export and print view include your points and profile.

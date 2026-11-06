@@ -426,6 +426,9 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 .unmeasured .profile-track { background: repeating-linear-gradient(135deg, var(--bar-track) 0 6px, transparent 6px 10px); }
 .unmeasured .profile-value { color: var(--ink-soft); font-weight: 400; }
 .profile-note { margin-bottom: 8px; }
+@media (max-width: 480px) {
+  .profile-head { flex-direction: column; align-items: flex-start; gap: 0; }
+}
 .print-sheet .profile-track, .print-sheet .profile-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
 @media (forced-colors: active) {
   .profile-track { border: 1px solid CanvasText; }
