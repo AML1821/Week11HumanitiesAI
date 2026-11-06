@@ -1,4 +1,4 @@
-/* Should I Use AI Here? (v1): notebook-on-a-desk theme, mobile first. */
+/* Should I Use AI Here? (v3): notebook-on-a-desk theme, mobile first. */
 
 :root {
   --desk: #e6dcc6;
@@ -21,6 +21,9 @@
   --r-works-bg: #d9e8f7;     --r-works-ink: #173b63;     --r-works-edge: #5b88b8;
   --r-shortcut-bg: #fbe3c4;  --r-shortcut-ink: #6a3b00;  --r-shortcut-edge: #c98a3a;
   --r-line-bg: #f6d3d3;      --r-line-ink: #7a1414;      --r-line-edge: #c45656;
+
+  --bar: #8a5a00;
+  --bar-track: #ece4d1;
 
   --font-body: Georgia, "Iowan Old Style", "Palatino Linotype", "Book Antiqua", serif;
   --font-hand: "Segoe Print", "Bradley Hand", "Comic Sans MS", "Chalkboard SE", cursive;
@@ -50,6 +53,9 @@
     --r-works-bg: #1f3550;     --r-works-ink: #c7defa;     --r-works-edge: #5b88b8;
     --r-shortcut-bg: #4a3216;  --r-shortcut-ink: #fbd9a8;  --r-shortcut-edge: #c98a3a;
     --r-line-bg: #4c2020;      --r-line-ink: #ffcaca;      --r-line-edge: #c45656;
+
+    --bar: #b8862a;
+    --bar-track: #3a372f;
   }
 }
 
@@ -402,4 +408,26 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
   display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
   font: 700 .78rem/1.5 var(--font-ui); background: var(--paper); color: inherit;
   border: 1px solid currentColor; vertical-align: middle;
+}
+
+/* ---------- v3: score and profile ---------- */
+.score-block { margin: 6px 0 22px; padding: 16px 0 6px; border-top: 1px dashed var(--paper-edge); border-bottom: 1px dashed var(--paper-edge); }
+.score-block .small-h:first-child { margin-top: 0; }
+.score-total { margin: 0 0 4px; }
+.score-total strong { font-size: 1.6rem; line-height: 1; }
+.score-total .hint { display: block; margin-top: 4px; }
+.profile-chart { list-style: none; padding: 0; margin: 8px 0 12px; display: grid; gap: 14px; }
+.profile-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.profile-label { font-weight: 700; }
+.profile-value { font: 600 .9rem/1.3 var(--font-ui); color: var(--ink); font-variant-numeric: tabular-nums; }
+.profile-track { position: relative; height: 12px; margin: 6px 0; border-radius: 4px; background: var(--bar-track); overflow: hidden; }
+.profile-fill { display: block; height: 100%; min-width: 4px; border-radius: 4px; background: var(--bar); }
+.profile-desc { margin: 0; font: .85rem/1.45 var(--font-ui); color: var(--ink-soft); }
+.unmeasured .profile-track { background: repeating-linear-gradient(135deg, var(--bar-track) 0 6px, transparent 6px 10px); }
+.unmeasured .profile-value { color: var(--ink-soft); font-weight: 400; }
+.profile-note { margin-bottom: 8px; }
+.print-sheet .profile-track, .print-sheet .profile-fill { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+@media (forced-colors: active) {
+  .profile-track { border: 1px solid CanvasText; }
+  .profile-fill { background: Highlight; }
 }

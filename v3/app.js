@@ -673,12 +673,50 @@
 
   const pointsText = (r) => `+${plural(pointsFor(r), "point")}`;
 
-  function renderFinish() {
+  // Points total, rating tally, and a bar per dimension (0-100%). Each bar's value is
+  // written out as text beside it, so the bars themselves are decorative for screen readers.
+  function scoreBlockHtml(score, counts) {
+    const rows = score.dims.map((d) => {
+      const measured = d.pct !== null;
+      const where = measured ? `Measured in ${plural(d.scenes, "scene")} on your path.` : "None of the scenes on your path tested this.";
+      return `
+        <li class="profile-row ${measured ? "" : "unmeasured"}">
+          <div class="profile-head">
+            <span class="profile-label">${esc(d.label)}</span>
+            <span class="profile-value">${measured ? `${d.pct}% · ` : ""}${esc(d.band)}</span>
+          </div>
+          <div class="profile-track" aria-hidden="true" ${measured ? `title="${esc(d.label)}: ${d.pct}%"` : ""}>
+            ${measured ? `<span class="profile-fill" style="width:${d.pct}%"></span>` : ""}
+          </div>
+          <p class="profile-desc">${d.description ? `${esc(d.description)} ` : ""}${esc(where)}</p>
+        </li>`;
+    }).join("");
+    return `
+      <div class="score-block">
+        <h3 class="small-h">Your score</h3>
+        <p class="score-total"><strong>${score.points}</strong> of ${plural(score.possible, "possible point")}
+          <span class="hint">(${plural(score.scenes, "scene")} finished; ${plural(maxPoints(), "point")} for a choice that transfers well)</span></p>
+        <ul class="tally" aria-label="Your choices by rating">
+          ${RATINGS.map((r) => `<li class="pill rating-${r}">${esc(ratingLabel(r))}: ${counts[r]}</li>`).join("")}
+        </ul>
+        <h3 class="small-h">Your profile</h3>
+        <ul class="profile-chart" aria-label="Your profile across three patterns">${rows}</ul>
+        <p class="hint profile-note">This profile describes patterns in the choices you made in this playthrough. It isn't a grade. Each bar compares your choices with the best and weakest choices available in the scenes you played, so paths of different lengths compare fairly. Not using AI is never scored against you: every choice without AI earns full points and never scores below zero on a pattern.</p>
+      </div>`;
+  }
+
+  // How many finished scenes on the path got each rating.
+  function ratingCounts(steps) {
     const counts = Object.fromEntries(RATINGS.map((r) => [r, 0]));
+    for (const st of steps) if (st.c && st.a?.done) counts[st.c.rating]++;
+    return counts;
+  }
+
+  function renderFinish() {
     const { steps, notTaken } = pathModel();
+    const counts = ratingCounts(steps);
     const nodes = steps.map((st, n) => {
       const { s, a, c } = st;
-      if (c && a.done) counts[c.rating]++;
       const conseq = isConsequence(s);
       const led = st.ledTo.map((l) => l.kind === "consequence"
         ? `<li class="led consequence-led">↳ Led to a consequence scene: <strong>${esc(l.step.s.title)}</strong></li>`
@@ -694,7 +732,7 @@
             ${c ? `<p class="finish-choice"><span class="label-sm">You chose</span> ${esc(c.text)}</p>` : `<p class="finish-choice muted">Not answered yet</p>`}
             ${led ? `<ul class="led-list">${led}</ul>` : ""}
             <div class="finish-side">
-              ${c ? `<span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}</span>` : ""}
+              ${c ? `<span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}${a?.done ? ` · ${esc(pointsText(c.rating))}` : ""}</span>` : ""}
               ${a?.done ? `<button type="button" class="btn small ghost" data-explore="${esc(s.id)}">Explore other choices</button>` : ""}
             </div>
           </div>
@@ -716,9 +754,8 @@
         <p>${allDone
           ? `You went through ${plural(steps.length, "scene")}. Each one below shows what you chose and where that choice showed up later. Choices stay locked, but you can explore the options you didn't pick. When you're ready, export your path and reflections to submit.`
           : "You haven't finished your path yet."}</p>
-        <ul class="tally" aria-label="Your choices by rating">
-          ${RATINGS.map((r) => `<li class="pill rating-${r}">${esc(ratingLabel(r))}: ${counts[r]}</li>`).join("")}
-        </ul>
+        ${scoreBlockHtml(scoreModel(steps), counts)}
+        <h3 class="small-h">The path you took</h3>
         <ol class="path" aria-label="The path you took">${nodes}</ol>
         ${allDone && roads ? `
           <div class="roads">
@@ -781,13 +818,16 @@
       const log = c && c.usesAI ? logQuestionsFor(s).map((q, k) => ({ q, a: (a.log || [])[k] || "" })) : null;
       return { ...st, n: n + 1, log };
     });
-    return { records, notTaken };
+    return { records, notTaken, score: scoreModel(steps) };
   }
+
+  // A ten-block text bar for the Markdown export, e.g. "███████░░░".
+  const textBar = (pct) => { const n = Math.floor(pct / 10); return "█".repeat(n) + "░".repeat(10 - n); };
 
   const stageName = (s) => (isConsequence(s) ? "Consequence" : s.stage);
 
   function buildMarkdown() {
-    const { records, notTaken } = buildRecords();
+    const { records, notTaken, score } = buildRecords();
     const lines = [];
     lines.push(`# Should I Use AI Here? (v3)`);
     lines.push("");
@@ -795,6 +835,18 @@
     lines.push(`**Started:** ${formatDate(state.startedAt)}  `);
     lines.push(`**Exported:** ${formatDate(new Date().toISOString())}  `);
     lines.push(`**Completed:** ${completedCount()} of ${pathLength()} scenes on my path`);
+    lines.push("");
+    lines.push(`## Score and profile`);
+    lines.push("");
+    lines.push(`**Points:** ${score.points} of ${score.possible} possible`);
+    lines.push("");
+    for (const d of score.dims) {
+      lines.push(d.pct === null
+        ? `- **${d.label}:** not measured on my path`
+        : `- **${d.label}:** \`${textBar(d.pct)}\` ${d.pct}% (${d.band}, ${plural(d.scenes, "scene")})`);
+    }
+    lines.push("");
+    lines.push(`_The profile describes patterns in this playthrough, not a grade._`);
     lines.push("");
     for (const { n, s, a, c, log, cause, echo } of records) {
       lines.push(`## ${n}. ${stageName(s)}: ${s.title}`);
@@ -804,7 +856,7 @@
       if (!c || !a?.locked) { lines.push("_Not answered yet._", ""); continue; }
       lines.push(`**My choice:** ${c.text}`);
       lines.push("");
-      lines.push(`**Rating:** ${ratingLabel(c.rating)} (${c.usesAI ? "uses AI" : "no AI"})`);
+      lines.push(`**Rating:** ${ratingLabel(c.rating)}, ${pointsText(c.rating)} (${c.usesAI ? "uses AI" : "no AI"})`);
       lines.push("");
       lines.push(`**Why I chose it:** ${a.pre}`);
       lines.push("");
@@ -870,7 +922,7 @@
   }
 
   function renderPrint() {
-    const { records, notTaken } = buildRecords();
+    const { records, notTaken, score } = buildRecords();
     const recs = records.map(({ n, s, a, c, log, cause, echo }) => `
       <section class="print-item">
         <h3>${n}. ${esc(stageName(s))}: ${esc(s.title)}</h3>
@@ -878,7 +930,7 @@
         ${echo ? `<p class="cause small">My earlier ${esc(echo.scene.stage)} choice showed up here: ${esc(echo.text)}</p>` : ""}
         ${!c || !a?.locked ? `<p><em>Not answered yet.</em></p>` : `
           <p><strong>My choice:</strong> ${esc(c.text)}</p>
-          <p><strong>Rating:</strong> ${esc(ratingLabel(c.rating))} (${c.usesAI ? "uses AI" : "no AI"})</p>
+          <p><strong>Rating:</strong> ${esc(ratingLabel(c.rating))}, ${esc(pointsText(c.rating))} (${c.usesAI ? "uses AI" : "no AI"})</p>
           <p><strong>Why I chose it:</strong> ${esc(a.pre)}</p>
           ${log
             ? `<p><strong>Practice GenAI log entry</strong></p><dl>${log.map(({ q, a: ans }) => `<dt>${esc(q)}</dt><dd>${esc(ans) || "<em>(blank)</em>"}</dd>`).join("")}</dl>`
@@ -901,6 +953,7 @@
            <strong>Started:</strong> ${esc(formatDate(state.startedAt))}<br>
            <strong>Printed:</strong> ${esc(formatDate(new Date().toISOString()))}<br>
            <strong>Completed:</strong> ${completedCount()} of ${pathLength()} scenes on my path</p>
+        ${scoreBlockHtml(score, ratingCounts(records))}
         ${recs}
         ${roads}
       </section>`;
