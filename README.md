@@ -76,6 +76,8 @@ v3 adds:
 - `points` and `dimensions` in `policy.json`: the points per rating and the list of dimensions (`id`, `label`, `description`). Change them there to retune scoring.
 - `variants` on a scene: `[{ "ifFlags": ["ai-topic"], "situation": "...", "choices": { "b": { "feedback": "..." } } }]`. The first variant whose flag an earlier choice set replaces the situation and the `text` or `feedback` of the listed choices. Ratings, flags, and scores can't be changed by a variant, so every player's choices stay comparable.
 
+Choices appear in the order they're listed, lettered A to D. In v3 each scene's order is set by hand so the strongest and weakest options don't always land in the same position. Choice ids don't have to follow that order; ids are what saved progress, variants, and exports refer to.
+
 Scenes play in list order. The game checks the file when it loads and shows an error if something is missing. It also warns in the browser console if an echo or trigger names a flag no earlier choice sets, which is usually a typo.
 
 ## Running it
