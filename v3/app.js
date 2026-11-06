@@ -38,6 +38,18 @@
   const ratingDesc = (r) => data.policy?.ratings?.[r]?.description || "";
   const plural = (n, w) => `${n} ${w}${n === 1 ? "" : "s"}`;
 
+  // Scoring defaults, used when policy.json doesn't define its own.
+  const DEFAULT_POINTS = { transfers: 3, works: 2, shortcut: 1, line: 0 };
+  const DEFAULT_DIMENSIONS = [
+    { id: "ownership", label: "Ownership of ideas", description: "" },
+    { id: "verification", label: "Verification", description: "" },
+    { id: "disclosure", label: "Honest disclosure", description: "" },
+  ];
+  const pointsTable = () => ({ ...DEFAULT_POINTS, ...(data.policy?.points || {}) });
+  const pointsFor = (r) => pointsTable()[r] ?? 0;
+  const maxPoints = () => Math.max(...RATINGS.map(pointsFor));
+  const dimensions = () => (Array.isArray(data.policy?.dimensions) && data.policy.dimensions.length ? data.policy.dimensions : DEFAULT_DIMENSIONS);
+
   function freshState() {
     return { version: VERSION, name: "", startedAt: null, finishedAt: null, currentIndex: 0, answers: {} };
   }
@@ -94,8 +106,9 @@
   function showStorageWarning() { $("#storage-warning").hidden = storageOk; }
 
   // ---------- data validation ----------
-  function validateScenarios(json) {
+  function validateScenarios(json, policy) {
     const errors = [];
+    const dimIds = (Array.isArray(policy?.dimensions) && policy.dimensions.length ? policy.dimensions : DEFAULT_DIMENSIONS).map((d) => d.id);
     if (!json || !Array.isArray(json.scenarios) || json.scenarios.length === 0) {
       return ["The file needs a non-empty \"scenarios\" list."];
     }
@@ -124,7 +137,20 @@
         if (typeof c.usesAI !== "boolean") errors.push(`${cw} needs "usesAI": true or false.`);
         if (!RATINGS.includes(c.rating)) errors.push(`${cw} has rating "${c.rating}"; use one of ${RATINGS.join(", ")}.`);
         if (c.flags !== undefined && !isStringList(c.flags)) errors.push(`${cw} has "flags" that aren't a list of words.`);
+        if (c.scores !== undefined) {
+          if (!c.scores || typeof c.scores !== "object" || Array.isArray(c.scores)) errors.push(`${cw} has "scores" that isn't an object.`);
+          else for (const [k, v] of Object.entries(c.scores)) {
+            if (!dimIds.includes(k)) errors.push(`${cw} scores "${k}", which isn't a dimension in policy.json (${dimIds.join(", ")}).`);
+            if (!Number.isInteger(v) || v < -2 || v > 2) errors.push(`${cw} has score ${k}: ${JSON.stringify(v)}; use a whole number from -2 to 2.`);
+          }
+        }
       });
+      // A dimension scored on some choices but not others is treated as 0 for the rest.
+      // That's allowed but usually an oversight, so warn instead of failing.
+      for (const k of dimIds) {
+        const n = s.choices.filter((c) => c && c.scores && k in c.scores).length;
+        if (n && n < s.choices.length) console.warn(`Scene "${s.id}" scores "${k}" on only ${n} of ${s.choices.length} choices; the rest count as 0.`);
+      }
       const type = s.type || "core";
       if (!["core", "consequence"].includes(type)) errors.push(`${where} has type "${s.type}"; use "core" or "consequence".`);
       if (type === "consequence") {
@@ -469,7 +495,7 @@
       save();
       renderScenario();
       const c = choiceOf(s, a.choiceId);
-      announce(`Feedback: ${ratingLabel(c.rating)}.`);
+      announce(`Feedback: ${ratingLabel(c.rating)}, ${pointsText(c.rating)}.`);
       const fb = $("#feedback-block .feedback");
       if (fb) { fb.setAttribute("tabindex", "-1"); fb.focus({ preventScroll: true }); fb.scrollIntoView({ behavior: prefersReducedMotion() ? "auto" : "smooth", block: "start" }); }
     });
@@ -488,7 +514,7 @@
   function feedbackHtml(c) {
     return `
       <div class="rating-sticker rating-${esc(c.rating)}">
-        <span class="rating-label">${esc(ratingLabel(c.rating))}</span>
+        <span class="rating-label">${esc(ratingLabel(c.rating))} <span class="points">${esc(pointsText(c.rating))}</span></span>
         <span class="rating-desc">${esc(ratingDesc(c.rating))}</span>
       </div>
       <p class="feedback-text">${esc(c.feedback)}</p>
@@ -611,6 +637,41 @@
       }));
     return { steps, notTaken };
   }
+
+  // ---------- scoring ----------
+  // Points: each finished scene earns its rating's points, out of the best rating's points.
+  // Profile: for each dimension, add up the player's scores in the scenes on their path that
+  // score that dimension, then place the total between the lowest and highest totals those
+  // same scenes allow (0-100%). Paths differ in length, so this keeps profiles comparable.
+  function scoreModel(steps = pathModel().steps) {
+    const done = steps.filter((st) => st.c && st.a?.done);
+    const best = maxPoints();
+    const points = done.reduce((n, st) => n + pointsFor(st.c.rating), 0);
+    const dims = dimensions().map((d) => {
+      let got = 0, lo = 0, hi = 0, scenes = 0;
+      for (const st of done) {
+        const vals = st.s.choices.map((c) => c.scores?.[d.id]).filter(Number.isInteger);
+        if (!vals.length) continue;
+        if (vals.length < st.s.choices.length) vals.push(0);
+        scenes++;
+        lo += Math.min(...vals);
+        hi += Math.max(...vals);
+        got += st.c.scores?.[d.id] ?? 0;
+      }
+      const pct = scenes && hi > lo ? Math.round(((got - lo) / (hi - lo)) * 100) : null;
+      return { ...d, scenes, pct, band: bandFor(pct) };
+    });
+    return { points, possible: done.length * best, scenes: done.length, dims };
+  }
+
+  function bandFor(pct) {
+    if (pct === null) return "Not measured on your path";
+    if (pct >= 75) return "Strong";
+    if (pct >= 40) return "Mixed";
+    return "Needs attention";
+  }
+
+  const pointsText = (r) => `+${plural(pointsFor(r), "point")}`;
 
   function renderFinish() {
     const counts = Object.fromEntries(RATINGS.map((r) => [r, 0]));
@@ -916,7 +977,7 @@
       showError("The game couldn't load.", [err.message]);
       return;
     }
-    const errors = validateScenarios(scen);
+    const errors = validateScenarios(scen, pol);
     if (errors.length) {
       showError("There's a problem in the scenario file.", errors);
       return;

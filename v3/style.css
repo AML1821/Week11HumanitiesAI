@@ -396,3 +396,10 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 @media print {
   .cause { background: none; border-left: 2px solid #999; color: #333; }
 }
+
+/* ---------- v3: points ---------- */
+.rating-sticker .points {
+  display: inline-block; margin-left: 6px; padding: 1px 8px; border-radius: 999px;
+  font: 700 .78rem/1.5 var(--font-ui); background: var(--paper); color: inherit;
+  border: 1px solid currentColor; vertical-align: middle;
+}

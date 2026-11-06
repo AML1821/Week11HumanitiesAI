@@ -18,6 +18,12 @@
     "shortcut": { "label": "Shortcut", "description": "Saves time now at a cost to your learning, your accuracy, or your honesty about the process." },
     "line": { "label": "Crosses a line", "description": "Conflicts with the course policy as written." }
   },
+  "points": { "transfers": 3, "works": 2, "shortcut": 1, "line": 0 },
+  "dimensions": [
+    { "id": "ownership", "label": "Ownership of ideas", "description": "The topic, claims, words, and judgments in your work came from your own thinking." },
+    { "id": "verification", "label": "Verification", "description": "You checked facts and sources yourself instead of trusting what AI handed you." },
+    { "id": "disclosure", "label": "Honest disclosure", "description": "You were open about how you used AI (or chose not to), through your GenAI log." }
+  ],
   "fullText": [
     "Generative AI refers to any tool that uses predictive modeling to produce text, images, code, audio, or other content in response to a prompt. ChatGPT, Claude, Gemini, Copilot, and the writing assistants embedded in many platforms all fall into this category. These systems were built on massive collections of human-generated writing, art, and code, much of it gathered without the knowledge or permission of the people who created it. Human workers, often underpaid and working in difficult conditions, labeled and filtered the data that makes these outputs possible. The computing infrastructure that runs these models carries a measurable environmental cost. This course will not ask you to solve any of those problems, but it will ask you to hold them in mind as part of what it means to use these tools with awareness.",
     "This course is organized around a reflective framework (such as Teaching for Transfer (TFT)), which means the central question is not just whether you can complete an assignment but whether you are building knowledge and habits that travel with you into new situations. That framework shapes everything about how AI is treated here. The question this policy is designed to answer is not whether AI is good or bad but what kind of relationship with it will serve you best as a developing writer and thinker. The answer this course proposes is critical, reflective, and honest engagement, the practiced capacity to make your own judgments about when AI is useful, when it is not, and what it cannot do that you must do for yourself.",
