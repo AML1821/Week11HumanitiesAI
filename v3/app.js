@@ -141,6 +141,25 @@
           }
         });
       }
+      if (s.variants !== undefined) {
+        if (!Array.isArray(s.variants)) errors.push(`${where} has "variants" that isn't a list.`);
+        else s.variants.forEach((v, k) => {
+          const vw = `${where}, variant ${k + 1}`;
+          if (!v || !isStringList(v.ifFlags) || !v.ifFlags.length) { errors.push(`${vw} needs "ifFlags" (a list).`); return; }
+          if (v.situation !== undefined && (typeof v.situation !== "string" || !v.situation.trim())) errors.push(`${vw} has an empty "situation".`);
+          if (v.choices !== undefined) {
+            if (!v.choices || typeof v.choices !== "object" || Array.isArray(v.choices)) { errors.push(`${vw} has "choices" that isn't an object keyed by choice id.`); return; }
+            for (const [cid, o] of Object.entries(v.choices)) {
+              if (!cids.has(cid)) errors.push(`${vw} changes choice "${cid}", which this scene doesn't have.`);
+              const keys = o && typeof o === "object" ? Object.keys(o) : [];
+              if (!keys.length || keys.some((x) => !["text", "feedback"].includes(x) || typeof o[x] !== "string" || !o[x].trim())) {
+                errors.push(`${vw}, choice "${cid}" can only change "text" and "feedback".`);
+              }
+            }
+          }
+          if (v.situation === undefined && v.choices === undefined) errors.push(`${vw} doesn't change anything; give it "situation" or "choices".`);
+        });
+      }
     });
     if (!errors.length) warnUnknownFlags(json.scenarios);
     return errors;
@@ -155,7 +174,7 @@
   function warnUnknownFlags(scenarios) {
     scenarios.forEach((s, i) => {
       const earlier = new Set(scenarios.slice(0, i).flatMap((x) => x.choices.flatMap((c) => c.flags || [])));
-      const named = [...(s.trigger?.anyFlags || []), ...(s.echoes || []).flatMap((e) => e.ifFlags)];
+      const named = [...(s.trigger?.anyFlags || []), ...(s.echoes || []).flatMap((e) => e.ifFlags), ...(s.variants || []).flatMap((v) => v.ifFlags)];
       for (const f of named) {
         if (!earlier.has(f)) console.warn(`Scene "${s.id}" refers to flag "${f}", but no earlier choice sets it.`);
       }
@@ -168,7 +187,7 @@
   function flagSourcesBefore(i) {
     const sources = new Map();
     for (let k = 0; k < i; k++) {
-      const s = data.scenarios[k];
+      const s = sceneView(k);
       const a = state.answers[s.id];
       if (!a || !a.locked || !isActive(k)) continue;
       const c = choiceOf(s, a.choiceId);
@@ -203,6 +222,35 @@
       if (f) return { text: e.text, flag: f, ...sources.get(f) };
     }
     return null;
+  }
+
+  // The first variant on scene i whose flags were set earlier, with the choice that set it.
+  function variantFor(i) {
+    const s = data.scenarios[i];
+    if (!s || !Array.isArray(s.variants)) return null;
+    const sources = flagSourcesBefore(i);
+    for (const v of s.variants) {
+      const f = v.ifFlags.find((x) => sources.has(x));
+      if (f) return { ...v, flag: f, ...sources.get(f) };
+    }
+    return null;
+  }
+
+  // Scene i as this player sees it: a variant can replace the situation and the text or
+  // feedback of individual choices. Ids, ratings, flags and scores always come from the
+  // base scene, so every player's choices stay comparable.
+  function sceneView(i) {
+    const s = data.scenarios[i];
+    const v = variantFor(i);
+    if (!v) return s;
+    return {
+      ...s,
+      situation: v.situation || s.situation,
+      choices: s.choices.map((c) => {
+        const o = v.choices?.[c.id];
+        return o ? { ...c, text: o.text || c.text, feedback: o.feedback || c.feedback } : c;
+      }),
+    };
   }
 
   const activeIndexes = () => data.scenarios.map((_, i) => i).filter(isActive);
@@ -328,8 +376,8 @@
   }
 
   function renderScenario() {
-    const s = scenarioAt(state.currentIndex);
-    if (!s || !isActive(state.currentIndex)) return setView({ name: "finish" });
+    if (!scenarioAt(state.currentIndex) || !isActive(state.currentIndex)) return setView({ name: "finish" });
+    const s = sceneView(state.currentIndex);
     const a = answerFor(s.id);
     const total = pathLength();
     const pos = positionOf(state.currentIndex) - 1;
@@ -543,7 +591,7 @@
   // consequence and what each choice led to; plus consequence scenes they never reached.
   function pathModel() {
     const steps = activeIndexes().map((i) => {
-      const s = data.scenarios[i];
+      const s = sceneView(i);
       const a = state.answers[s.id];
       const c = a && a.locked ? choiceOf(s, a.choiceId) : null;
       return { i, s, a, c, cause: triggerSource(i), echo: echoFor(i), ledTo: [] };
@@ -637,8 +685,9 @@
   }
 
   function renderExplore(sid) {
-    const s = data.scenarios.find((x) => x.id === sid);
-    if (!s) return setView({ name: "finish" });
+    const idx = data.scenarios.findIndex((x) => x.id === sid);
+    if (idx === -1) return setView({ name: "finish" });
+    const s = sceneView(idx);
     const a = state.answers[sid] || {};
     const items = s.choices.map((c, i) => {
       const mine = c.id === a.choiceId;

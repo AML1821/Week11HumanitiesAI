@@ -74,6 +74,19 @@
       "title": "You need six credible sources",
       "assignment": "Unit 2: Annotated bibliography (6 sources, at least 3 peer-reviewed)",
       "situation": "You've settled on a question about food insecurity among college students. The library databases feel overwhelming, and you've heard AI can just give you a list of sources.",
+      "variants": [
+        {
+          "ifFlags": [
+            "ai-topic"
+          ],
+          "situation": "You've gone with the topic AI suggested: how social media affects teenagers' mental health. It's a question plenty of people have argued about, and you don't have a personal angle on it yet. The library databases feel overwhelming, and you've heard AI can just give you a list of sources.",
+          "choices": {
+            "b": {
+              "feedback": "This uses AI for what it's reasonably good at (finding vocabulary and adjacent ideas, like \"adolescent well-being\" or \"problematic social media use\") and keeps you in charge of finding and judging the actual sources. With a topic this widely studied, narrower terms are also how you find a corner of the research that isn't already crowded. You'll learn database searching, which transfers to every research task you'll do. Log the terms it gave you and which ones led somewhere."
+            }
+          }
+        }
+      ],
       "learningGoal": "Finding, evaluating, and actually reading credible sources, a skill every future research task depends on.",
       "preReflectPrompt": "In one sentence, why is this the move you'd make?",
       "postReflectPrompt": "How do you usually decide whether a source is trustworthy? Did this scenario change anything about how you'd check?",
