@@ -493,11 +493,11 @@
         },
         {
           "id": "d",
-          "text": "Ask AI to turn your paper into a short slide deck with speaker notes, then edit it before you present.",
+          "text": "Ask AI to draft a short slide deck from your paper, then rewrite every speaker note in your own words, cut the slides that don't help a listener, and log what it made and what you changed.",
           "usesAI": true,
           "rating": "works",
-          "feedback": "Turning a paper into slides is partly a formatting job, and a draft deck can save time if you revise it seriously. The risk is that AI slides tend to be bullet-point summaries of your paper, not a pitch, and the speaker notes can quietly become your script. If you rewrite the notes in your own words and cut slides that don't help a listener, this works. If you read the notes as written, it becomes a shortcut.",
-          "policyLink": "\"You are responsible for what it produces.\" Log what it made and what you changed.",
+          "feedback": "This works. Turning a paper into slides is partly a formatting job, and you're doing the parts that matter: the words you'll say are yours, you're deciding what a listener needs, and your log says exactly what AI contributed. It's rated Works rather than Transfers well because the deck's structure and framing still came from AI, so you skip some practice in shaping an argument for a live audience yourself. Reading AI-written notes word for word would be a different choice, closer to having AI write your script.",
+          "policyLink": "\"You are responsible for what it produces.\" Your log entry covers what it made and what you changed.",
           "ethicsNote": null,
           "flags": []
         }
