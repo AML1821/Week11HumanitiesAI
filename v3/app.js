@@ -1,4 +1,4 @@
-/* Should I Use AI Here? (v2: consequences)
+/* Should I Use AI Here? (v3: scoring)
    Plain JS, no build step. Scenarios and policy load from data/*.json via fetch();
    each player's progress and reflections live in localStorage under STORE_KEY.
 
@@ -13,8 +13,8 @@
 (() => {
   "use strict";
 
-  const VERSION = 2;
-  const STORE_KEY = "shouldIUseAI.v2";
+  const VERSION = 3;
+  const STORE_KEY = "shouldIUseAI.v3";
   const SCENARIOS_URL = "data/scenarios.json";
   const POLICY_URL = "data/policy.json";
   const PRE_MIN = 8;
@@ -276,7 +276,7 @@
         <h1>Should I Use AI Here?</h1>
         <p class="lede">You'll face ${data.scenarios.filter((s) => !isConsequence(s)).length} real moments from a writing course. For each one, decide whether and how you'd use generative AI, explain why, and see how your choice plays out against the course policy.</p>
         <ul class="stage-list" aria-label="Stages">${stages}</ul>
-        <p class="new-note"><strong>New in version 2:</strong> your choices follow you. Earlier decisions show up in later scenes, and some choices lead to extra scenes that only appear on certain paths. At the end you'll see the path you took.</p>
+        <p class="new-note"><strong>New in version 3:</strong> scoring that isn't just right or wrong. Each choice earns points by how well it transfers, and at the end you'll see a profile of your patterns across ownership of ideas, verification, and honest disclosure. Your choices still follow you: earlier decisions show up in later scenes, and some lead to extra scenes.</p>
         <div class="sticky-note">
           <p class="note-title">From the course policy</p>
           ${summary}
@@ -679,7 +679,7 @@
   function buildMarkdown() {
     const { records, notTaken } = buildRecords();
     const lines = [];
-    lines.push(`# Should I Use AI Here? (v2)`);
+    lines.push(`# Should I Use AI Here? (v3)`);
     lines.push("");
     lines.push(`**Name:** ${state.name || "(not given)"}  `);
     lines.push(`**Started:** ${formatDate(state.startedAt)}  `);
@@ -786,7 +786,7 @@
           <button type="button" class="btn primary" data-action="print">Print / Save as PDF</button>
           <button type="button" class="btn ghost" data-action="to-finish">Back</button>
         </div>
-        <h2>Should I Use AI Here? (v2)</h2>
+        <h2>Should I Use AI Here? (v3)</h2>
         <p><strong>Name:</strong> ${esc(state.name || "(not given)")}<br>
            <strong>Started:</strong> ${esc(formatDate(state.startedAt))}<br>
            <strong>Printed:</strong> ${esc(formatDate(new Date().toISOString()))}<br>
