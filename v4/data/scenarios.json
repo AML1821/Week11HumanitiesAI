@@ -1,0 +1,846 @@
+{
+  "schemaVersion": 4,
+  "scenarios": [
+    {
+      "id": "brainstorm-topic",
+      "type": "core",
+      "stage": "Brainstorming",
+      "title": "A blank page and a broad prompt",
+      "icon": "lightbulb",
+      "character": {
+        "name": "Maya",
+        "role": "your roommate"
+      },
+      "setup": "Maya is cross-legged on her bed with a bowl of instant ramen, laptop balanced on one knee. She glances over at your empty document and grins. \"Still nothing?\"",
+      "assignment": "Unit 2: Research-based argument on a question that matters to a community you belong to",
+      "situation": "The prompt is wide open, and you have no idea what to write about. Your roommate says they just asked ChatGPT for topic ideas and picked one in five minutes. Your proposal is due Friday.",
+      "learningGoal": "Finding a question you actually care about, which is what keeps a long research project going.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "Think of a time a topic was assigned to you versus one you chose. What changed about how you wrote? What does that suggest about where your topic should come from here?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you keep, change, or discard, and why?",
+        "Would your topic be meaningfully different if you hadn't used AI? How?"
+      ],
+      "choices": [
+        {
+          "id": "b",
+          "text": "Ask AI for ten topic ideas and pick whichever sounds easiest to research.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "ownership": -1,
+            "disclosure": 0
+          },
+          "feedback": "This gets you a topic fast, and it's allowed if you log it. But AI suggestions tend toward the most common, most written-about topics, and \"easiest to research\" often means \"already argued a thousand times.\" You skip the step where you find out what you actually want to know, and that question is what carries you through weeks of research.",
+          "policyLink": "Allowed with a log entry, but ask: \"Would the piece be meaningfully different if you had not used it?\" Here, probably yes.",
+          "ethicsNote": null,
+          "flags": [
+            "ai-topic"
+          ]
+        },
+        {
+          "id": "c",
+          "text": "Skip AI. Freewrite, talk it through with a friend, and look at what's been in the news in your communities.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "Brainstorming is a step where your own experience is the main resource, and nothing about it requires AI. Talking it through is underrated: explaining an idea out loud often shows you whether you care about it. You might miss an angle a quick AI check would surface, but the topic will be unmistakably yours.",
+          "policyLink": "Choosing not to use AI is never penalized. Note the decision in your GenAI log and what it reveals about your thinking.",
+          "ethicsNote": null,
+          "flags": [
+            "own-topic"
+          ]
+        },
+        {
+          "id": "d",
+          "text": "Ask AI to choose a topic for you and write a working thesis you can use in your proposal.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "ownership": -2,
+            "disclosure": 0
+          },
+          "feedback": "Now AI is making the two most important decisions in the project: what you're asking and what you think. Even with a log entry, you'd be starting a research project with a conclusion you haven't earned, which makes it hard to research honestly. If you paste the thesis into your proposal as your own without logging it, that crosses the line.",
+          "policyLink": "\"The ideas you submit [must] reflect your own thinking.\" A logged thesis is disclosed, but is it yours?",
+          "ethicsNote": null,
+          "flags": [
+            "ai-topic"
+          ]
+        },
+        {
+          "id": "a",
+          "text": "Freewrite for ten minutes about communities you're part of and what bugs you about them, then ask AI to poke holes in your top two ideas.",
+          "usesAI": true,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "Your thinking comes first, so the topic stays rooted in something you care about. Then AI is used the way a skeptical classmate might be: to stress-test, not to originate. Notice what kind of objections it raises. They're often generic, which tells you something about how it processes language (by pattern, not by stakes). That's a process you can reuse on any project.",
+          "policyLink": "\"Your own voice and your own thinking come first and foremost.\" Log the interaction, including what you made of its objections.",
+          "ethicsNote": null,
+          "flags": [
+            "own-topic"
+          ]
+        }
+      ]
+    },
+    {
+      "id": "research-sources",
+      "type": "core",
+      "stage": "Research",
+      "title": "You need six credible sources",
+      "icon": "books",
+      "character": {
+        "name": "Luis",
+        "role": "your classmate"
+      },
+      "setup": "The third floor of the library smells like old carpet and printer toner. Luis drops into the chair across from you, unzips his backpack, and asks how many sources you have so far. You hold up zero fingers.",
+      "assignment": "Unit 2: Annotated bibliography (6 sources, at least 3 peer-reviewed)",
+      "situation": "You've settled on a question about food insecurity among college students. The library databases feel overwhelming, and you've heard AI can just give you a list of sources.",
+      "variants": [
+        {
+          "ifFlags": [
+            "ai-topic"
+          ],
+          "situation": "You've gone with the topic AI suggested: how social media affects teenagers' mental health. It's a question plenty of people have argued about, and you don't have a personal angle on it yet. The library databases feel overwhelming, and you've heard AI can just give you a list of sources.",
+          "choices": {
+            "b": {
+              "feedback": "This uses AI for what it's reasonably good at (finding vocabulary and adjacent ideas, like \"adolescent well-being\" or \"problematic social media use\") and keeps you in charge of finding and judging the actual sources. With a topic this widely studied, narrower terms are also how you find a corner of the research that isn't already crowded. You'll learn database searching, which transfers to every research task you'll do. Log the terms it gave you and which ones led somewhere."
+            }
+          }
+        }
+      ],
+      "learningGoal": "Finding, evaluating, and actually reading credible sources, a skill every future research task depends on.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "How do you usually decide whether a source is trustworthy? Did this scenario change anything about how you'd check?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "How did you verify what it gave you?",
+        "What did the interaction reveal about how AI handles facts compared to how you do?"
+      ],
+      "choices": [
+        {
+          "id": "b",
+          "text": "Ask AI to suggest search terms and related concepts, then run those searches in the UCF Library databases yourself.",
+          "usesAI": true,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 1,
+            "verification": 2
+          },
+          "feedback": "This uses AI for what it's reasonably good at (finding vocabulary and adjacent ideas, like \"basic needs insecurity\" or \"campus food pantries\") and keeps you in charge of finding and judging the actual sources. You'll learn database searching, which transfers to every research task you'll do. Log the terms it gave you and which ones led somewhere.",
+          "policyLink": "A strong example of AI as \"something to examine, not something to lean on.\"",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "d",
+          "text": "Find a promising paywalled article through the library, then paste the full text into a chatbot and ask for a summary to use in your annotation.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "ownership": -1,
+            "verification": -1
+          },
+          "feedback": "You found a real source, which is good. But annotating from a summary means you're evaluating the AI's reading, not the article, and summaries often flatten nuance or misstate methods. Pasting a full licensed article into a third-party tool also raises questions about the authors' rights. Reading at least the abstract, introduction, and conclusion yourself is the part that counts.",
+          "policyLink": "\"Verify that it has not reproduced recognizable copyrighted material\" and \"you are responsible for what it produces.\"",
+          "ethicsNote": "These models were built partly on writing gathered without its authors' permission. Feeding them full copyrighted articles extends that pattern.",
+          "flags": [
+            "summary-reading"
+          ]
+        },
+        {
+          "id": "a",
+          "text": "Ask AI for six peer-reviewed sources with full citations and put them straight into your bibliography.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "ownership": -2,
+            "verification": -2
+          },
+          "feedback": "Chatbots regularly invent sources: plausible authors, real-sounding journals, articles that don't exist. Even when a source is real, you'd be annotating something you haven't read. Submitting citations you haven't verified misrepresents your research, log or no log. This is one of the most common ways students get into academic integrity trouble with AI.",
+          "policyLink": "\"You are responsible for what it produces.\" Unverified sources presented as your research cross the line.",
+          "ethicsNote": null,
+          "flags": [
+            "unverified-sources"
+          ]
+        },
+        {
+          "id": "c",
+          "text": "Book a session with a UCF librarian and work through the databases without AI.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "verification": 2
+          },
+          "feedback": "Librarians are experts at exactly this, and they can show you search strategies (subject headings, citation chaining) that AI won't teach you. It takes more scheduling, but you leave with a skill rather than a list. It's a completely valid choice not to use AI here.",
+          "policyLink": "Choosing not to use AI is never penalized. Note the decision in your GenAI log.",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ],
+      "echoes": [
+        {
+          "ifFlags": [
+            "ai-topic"
+          ],
+          "text": "The topic you're working with is broad and heavily studied. Your first searches return thousands of national results and nothing about your own community or campus."
+        },
+        {
+          "ifFlags": [
+            "own-topic"
+          ],
+          "text": "Your freewrite already gives you a head start. You know specific local terms, places, and people that could point your searches somewhere useful."
+        }
+      ]
+    },
+    {
+      "id": "drafting-intro",
+      "type": "core",
+      "stage": "Drafting",
+      "title": "11 p.m., no introduction",
+      "icon": "moon",
+      "character": {
+        "name": "Maya",
+        "role": "your roommate"
+      },
+      "setup": "The desk lamp is the only light in the room. Maya is already asleep, one arm hanging off her bed, and your cold coffee has a skin on top. Your eyes keep drifting to the top of the screen.",
+      "assignment": "Unit 2: Full draft of the research-based argument (due at 9 a.m.)",
+      "situation": "Your body paragraphs are rough but written. The intro has been a blinking cursor for an hour. A chatbot tab is open.",
+      "learningGoal": "Learning how openings work so you can write one for any audience, not just this one.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "What makes introductions hard for you specifically? What could you try next time before you hit this point at 11 p.m.?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you keep, change, or discard, and why?",
+        "What did the interaction reveal about how AI writes compared to how you do?"
+      ],
+      "choices": [
+        {
+          "id": "c",
+          "text": "Ask AI to explain three different strategies for opening an argument (with no example about your topic), then write your own using one.",
+          "usesAI": true,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "This uses AI as a tutor rather than a ghostwriter. You learn moves (an anecdote, a surprising statistic, a common misconception) that work for any future intro, and every word on the page is yours. It's a little slower tonight and much faster next time.",
+          "policyLink": "AI as \"something to examine\": log what it explained and which strategy you chose.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "b",
+          "text": "Have AI write a draft intro, then rewrite it heavily in your own words and log the whole interaction.",
+          "usesAI": true,
+          "rating": "works",
+          "scores": {
+            "ownership": 0,
+            "disclosure": 2
+          },
+          "feedback": "This is honest and allowed, and rewriting heavily means you're doing real work. The risk is anchoring: once you've seen the AI's version, its framing tends to stick, so your intro may follow its structure even if the words are yours. The log question \"Would the piece be meaningfully different?\" is worth answering carefully here.",
+          "policyLink": "Allowed with a complete, honest log entry. The log is your disclosure.",
+          "ethicsNote": null,
+          "flags": [
+            "ai-intro-logged"
+          ]
+        },
+        {
+          "id": "d",
+          "text": "Skip the intro for now. Reread your body paragraphs, write a one-sentence summary of each, and build the intro from those.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "Writing the intro last is a strategy many experienced writers use: you can't introduce an argument you haven't finished making. Summarizing your own paragraphs also shows you what your argument actually is, which often sharpens the thesis. No AI needed.",
+          "policyLink": "Choosing not to use AI is never penalized. A quick log note about the choice is good practice.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Have AI write the intro, tweak a few words so it sounds like you, and submit without mentioning it.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "ownership": -2,
+            "disclosure": -2
+          },
+          "feedback": "This is the clearest case in the course policy: AI-generated writing submitted as your own with no log entry. Light edits don't change who wrote it. Beyond the integrity issue, you'd skip learning how to open an argument, and that problem will come back on the next paper.",
+          "policyLink": "\"Submitting AI-generated writing as your own without a corresponding log entry is a violation of UCF's Golden Rule.\"",
+          "ethicsNote": null,
+          "flags": [
+            "undisclosed-intro"
+          ]
+        }
+      ],
+      "echoes": [
+        {
+          "ifFlags": [
+            "ai-topic"
+          ],
+          "text": "You know what your paper argues, but saying why it matters is harder. You didn't arrive at this topic yourself, so the reason it's worth reading isn't something you can pull from memory."
+        }
+      ]
+    },
+    {
+      "id": "citations-works-cited",
+      "type": "core",
+      "stage": "Citations",
+      "title": "Formatting the works cited page",
+      "icon": "list",
+      "character": {
+        "name": "Priya",
+        "role": "your study-group friend"
+      },
+      "setup": "Priya slides a granola bar across the table in the student union and taps her phone to show you the time. \"Clock's ticking,\" she says. Your sources are spread across six open tabs and a crumpled sticky note.",
+      "assignment": "Unit 2: Final draft with MLA works cited",
+      "situation": "You have eight sources and an hour before the deadline. You also used a chatbot earlier to help brainstorm counterarguments, and you're not sure how to account for that.",
+      "learningGoal": "Accurate attribution, so readers can find your sources and see where ideas came from.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "Why do you think citation matters beyond avoiding plagiarism? Who is it actually for?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you check or correct, and why?",
+        "Would your works cited page be meaningfully different if you hadn't used AI?"
+      ],
+      "choices": [
+        {
+          "id": "d",
+          "text": "Add an MLA citation for the chatbot to your works cited page. That covers the brainstorming you did with it, so you don't need a log entry.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "verification": 0,
+            "disclosure": -1
+          },
+          "feedback": "This is a common misunderstanding. In this course, the GenAI log is the disclosure mechanism, and no separate citation format is required. A works cited entry doesn't tell your instructor what you asked, what it produced, or what you kept, which is the information that matters. Without the log entry, you haven't fully disclosed. Write the entry instead.",
+          "policyLink": "\"The log is your disclosure mechanism for this course. No separate citation format is required for AI interactions.\"",
+          "ethicsNote": null,
+          "flags": [
+            "cited-instead-of-logged"
+          ]
+        },
+        {
+          "id": "b",
+          "text": "One source was a statistic AI gave you earlier. Ask AI to generate a citation for where that statistic came from.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "verification": -2,
+            "disclosure": -1
+          },
+          "feedback": "If you haven't found and read the original source, you can't cite it, and AI may produce a citation for a study that doesn't exist or doesn't say what it claimed. Citing an unverified source tells your reader something false about your research. Find the statistic in a real source, or cut it.",
+          "policyLink": "\"You are responsible for what it produces.\" A fabricated or unverified citation crosses the line.",
+          "ethicsNote": null,
+          "flags": [
+            "fabricated-citation"
+          ]
+        },
+        {
+          "id": "c",
+          "text": "Use Zotero or the citation tool in the library database, then check the results against the Purdue OWL.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "verification": 2,
+            "disclosure": 2
+          },
+          "feedback": "Citation managers pull metadata from the source record, so they're usually more accurate than a chatbot, and learning one will save you hours across your degree. They make mistakes too, so the OWL check still matters. A strong, AI-free choice.",
+          "policyLink": "No GenAI log entry is needed for a citation manager that doesn't generate content.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Give AI the details you copied from each source (author, title, journal, date, DOI) and ask it to format them in MLA, then check each one against the Purdue OWL.",
+          "usesAI": true,
+          "rating": "works",
+          "scores": {
+            "verification": 2,
+            "disclosure": 2
+          },
+          "feedback": "Formatting is a mechanical task, and you're giving AI accurate information and then verifying the output, which is the right order. Expect to catch errors: AI often gets capitalization, punctuation, and container rules subtly wrong. Log it. You're still not learning MLA very deeply, which is the trade-off.",
+          "policyLink": "\"You are responsible for what it produces\": your check against the OWL is that responsibility in action.",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ],
+      "echoes": [
+        {
+          "ifFlags": [
+            "unverified-sources"
+          ],
+          "text": "Two entries on your list came from a chatbot's suggestions, and one of them has no DOI you can find anywhere."
+        },
+        {
+          "ifFlags": [
+            "summary-reading"
+          ],
+          "text": "One article on your list is something you only know through an AI summary, so you're not completely sure what it says."
+        }
+      ]
+    },
+    {
+      "id": "consequence-missing-source",
+      "type": "consequence",
+      "stage": "Consequence",
+      "title": "The source that wasn't there",
+      "icon": "alert",
+      "character": {
+        "name": "Priya",
+        "role": "your study-group friend"
+      },
+      "setup": "Your phone buzzes during lunch with a new email from your instructor. Priya watches your face change and sets down her sandwich. \"Everything okay?\" she asks, leaning in to read over your shoulder.",
+      "trigger": {
+        "anyFlags": [
+          "unverified-sources",
+          "fabricated-citation"
+        ]
+      },
+      "assignment": "Unit 2: Office hours follow-up on your works cited page",
+      "situation": "Your instructor emails to say they can't locate two of the sources on your works cited page. They ask you to come to office hours this week and bring those two sources with you.",
+      "learningGoal": "Owning and correcting a research mistake, which is part of being a writer readers can trust.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "What makes a mistake with sources recoverable? What will you do differently the next time AI hands you a citation?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "How did you check (or not check) what it gave you?",
+        "What did this reveal about how AI handles facts compared to how you do?"
+      ],
+      "choices": [
+        {
+          "id": "c",
+          "text": "Tell your instructor the sources are real and you must have copied the links wrong.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "verification": -2,
+            "disclosure": -2
+          },
+          "feedback": "It's understandable to want to avoid an uncomfortable admission. But the sources came from AI, and saying otherwise presents unverified research as real while hiding the AI use behind it. That turns a common, fixable error into an integrity problem. Your instructor can help you with the truth much more easily than with a story that won't hold up.",
+          "policyLink": "\"You are responsible for what it produces.\" Presenting unverified sources as real, and concealing where they came from, crosses the line.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Go to office hours, explain honestly where the two sources came from, bring your chat history, and write the GenAI log entry that was missing.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "verification": 0,
+            "disclosure": 2
+          },
+          "feedback": "This is the move that makes the problem fixable. Mistakes with AI-suggested sources are very common, and your instructor can work with an honest account far more easily than a vague one. The chat history shows exactly what happened, and writing the missing entry turns an error into the kind of reflection the log is designed for.",
+          "policyLink": "The log \"is not a punishment or a surveillance mechanism.\" A complete, honest entry, even a late one, is what the policy asks for.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "d",
+          "text": "Withdraw the two sources, re-verify every remaining source in the library databases, and email your instructor a corrected list with a log entry before the meeting.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "verification": 2,
+            "disclosure": 2
+          },
+          "feedback": "You're taking responsibility before anyone has to ask twice. Re-checking every source, not just the two flagged ones, builds a verification habit you'll use on every research project. Sending the log entry with the corrected list means the meeting can be about what you learned rather than what went wrong.",
+          "policyLink": "\"Your GenAI log documents that responsibility.\" Pair the corrected list with an honest entry about where the original sources came from.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "b",
+          "text": "Before the meeting, ask AI to find real sources that make similar points, swap them in, and don't mention the change.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "verification": -1,
+            "disclosure": -1
+          },
+          "feedback": "Wanting real sources is a good instinct, as long as you verify each replacement yourself, since AI can invent those too. But a quiet swap means your instructor still doesn't know what happened, and the meeting becomes about a list that changed overnight. Concealment tends to make a recoverable mistake harder to recover from. Make the replacements and explain them, with a log entry for both rounds of AI use.",
+          "policyLink": "\"The entry must be complete and honest.\" A silent swap leaves the original AI use undisclosed.",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ]
+    },
+    {
+      "id": "peer-review-classmate",
+      "type": "core",
+      "stage": "Peer review",
+      "title": "Reviewing a classmate's draft",
+      "icon": "people",
+      "character": {
+        "name": "Jordan",
+        "role": "your peer-review partner"
+      },
+      "setup": "Jordan pushes a stapled draft across the desk, pages a little curled from the walk to class. \"Be honest,\" they say, half-laughing, and pull out a pen to start on yours while you flip to page one.",
+      "assignment": "Unit 2: Peer review workshop (written comments on one classmate's draft)",
+      "situation": "Your partner's draft is long, and you're not sure what to say beyond \"good job.\" You know AI could produce detailed feedback in seconds.",
+      "learningGoal": "Learning to read critically as a writer, which is also how you learn to revise your own work.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "What's the most useful peer feedback you've ever gotten? What made it useful, and could AI have given it to you?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you keep, change, or discard, and why?",
+        "What did the interaction reveal about how AI reads compared to how you do?"
+      ],
+      "choices": [
+        {
+          "id": "d",
+          "text": "Ask AI to explain what makes a counterargument paragraph effective, then use that to write your own comments on that part of their draft.",
+          "usesAI": true,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "You're using AI to learn a concept, not to do the reading. The comments are yours, the draft stays private, and you leave knowing something about counterarguments that will help your own paper too. Log what you asked and how you applied it.",
+          "policyLink": "AI as \"something to examine, not something to lean on.\"",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "c",
+          "text": "Write your own comments using the workshop guide: what you understood as the main claim, where you got lost, and what convinced you most.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "This is what your classmate needs: an honest account of one real reader's experience. \"I got lost here\" is feedback only a human reader can give. Practicing it also trains you to read your own drafts this way. No AI required, and that's a fully valid choice.",
+          "policyLink": "Choosing not to use AI is never penalized.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Paste your classmate's draft into a chatbot, ask for feedback, and send them its comments.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "ownership": -2,
+            "disclosure": -2
+          },
+          "feedback": "Your classmate shared their draft with you, not with an AI company, and they didn't consent to having it uploaded. They're also expecting a human reader's response: what confused you, what convinced you. Sending AI comments as your review misrepresents the work you did, and you skip the critical reading the workshop is meant to build.",
+          "policyLink": "Submitting AI-generated feedback as your own without a log entry crosses the line, and this one also involves someone else's work.",
+          "ethicsNote": "Uploading a classmate's writing without permission raises consent and privacy issues on top of the policy concerns.",
+          "flags": [
+            "uploaded-peer-draft"
+          ]
+        },
+        {
+          "id": "b",
+          "text": "Write your comments first. Then ask AI, in general terms and without pasting their draft, what reviewers commonly overlook in research arguments, and check whether you missed any of those.",
+          "usesAI": true,
+          "rating": "works",
+          "scores": {
+            "ownership": 1,
+            "disclosure": 2
+          },
+          "feedback": "Your reading comes first and their draft stays private. Using AI as a checklist generator can remind you of things like counterarguments or source integration. It's a reasonable use. Just make sure the extra points you add are things you actually see in their draft, not generic advice.",
+          "policyLink": "Log what you asked and which reminders you actually applied.",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ],
+      "echoes": [
+        {
+          "ifFlags": [
+            "ai-topic"
+          ],
+          "text": "Jordan has already read your draft, and their first question is \"Why do you care about this?\" You realize you don't have a ready answer."
+        },
+        {
+          "ifFlags": [
+            "own-topic"
+          ],
+          "text": "Jordan has already read your draft. They tell you they've lived this too, and they want to know more about what you saw."
+        }
+      ]
+    },
+    {
+      "id": "consequence-pitch",
+      "type": "consequence",
+      "stage": "Consequence",
+      "title": "Pitch it in two minutes",
+      "icon": "mic",
+      "character": {
+        "name": "Luis",
+        "role": "your classmate"
+      },
+      "setup": "After class, Luis catches up with you in the hallway and gives you a quick fist bump. \"Showcase? That's huge,\" he says. You picture the lecture hall full of faces, and your stomach does a small flip.",
+      "trigger": {
+        "anyFlags": [
+          "own-topic"
+        ]
+      },
+      "assignment": "Unit 2: Class research showcase (2-minute spoken pitch)",
+      "situation": "Your instructor has picked your topic for the class research showcase because it comes out of something you've actually lived. You have two days to prepare a two-minute spoken pitch for classmates and faculty.",
+      "learningGoal": "Adapting an argument for a new audience and a new medium, one of the clearest tests of whether a skill transfers.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "What changes when you move an argument from the page to a live audience? What did you need to know about your own topic to make that move?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you keep, change, or discard, and why?",
+        "Would your pitch be meaningfully different if you hadn't used AI? How?"
+      ],
+      "choices": [
+        {
+          "id": "c",
+          "text": "Pull out your original freewrite notes and talk the pitch through with a friend until it sounds natural. No AI.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "Your freewrite is where this topic started, so it's full of the details that made it worth picking. A real listener shows you where people lean in and where they lose the thread, and you can use that right away. It's a completely valid choice not to use AI here.",
+          "policyLink": "Choosing not to use AI is never penalized. Note the decision in your GenAI log and what it reveals about your thinking.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "d",
+          "text": "Ask AI to draft a short slide deck from your paper, then rewrite every speaker note in your own words, cut the slides that don't help a listener, and log what it made and what you changed.",
+          "usesAI": true,
+          "rating": "works",
+          "scores": {
+            "ownership": 1,
+            "disclosure": 2
+          },
+          "feedback": "This works. Turning a paper into slides is partly a formatting job, and you're doing the parts that matter: the words you'll say are yours, you're deciding what a listener needs, and your log says exactly what AI contributed. It's rated Works rather than Transfers well because the deck's structure and framing still came from AI, so you skip some practice in shaping an argument for a live audience yourself. Reading AI-written notes word for word would be a different choice, closer to having AI write your script.",
+          "policyLink": "\"You are responsible for what it produces.\" Your log entry covers what it made and what you changed.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Ask AI to write a two-minute pitch script from your paper, then practice reading it aloud.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "ownership": -1,
+            "disclosure": 0
+          },
+          "feedback": "This gets you a polished script fast, and it's allowed if you log it. But your topic was picked because it came from your own experience, and reading someone else's words about your own life loses exactly that. Audiences can usually tell when a speaker is reciting instead of talking. You'd also skip practice adapting an argument for a new audience, which is the skill this moment offers.",
+          "policyLink": "Every AI interaction that touches an assignment belongs in your GenAI log, and \"your own voice and your own thinking come first and foremost.\"",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "b",
+          "text": "Draft your pitch yourself, then ask AI to play a skeptical audience member and ask you hard questions.",
+          "usesAI": true,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "Your words and your experience stay at the center, and AI becomes a rehearsal partner. Notice which questions feel generic and which ones actually make you think: that difference says something about how it processes language. Preparing for pushback is a habit that helps with any presentation, interview, or argument you make later.",
+          "policyLink": "AI as \"something to examine, not something to lean on.\" Log the questions it asked and which ones changed your pitch.",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ]
+    },
+    {
+      "id": "revising-development",
+      "type": "core",
+      "stage": "Revising",
+      "title": "\"Your argument lacks development\"",
+      "icon": "pencil",
+      "character": {
+        "name": "Priya",
+        "role": "your study-group friend"
+      },
+      "setup": "Your graded draft is open on one side of the screen, the margins crowded with comment bubbles. Priya, curled up at the other end of the couch with her own laptop, asks what your instructor said.",
+      "assignment": "Unit 2: Revision after instructor feedback",
+      "situation": "Your instructor's comments say several claims need more support and analysis. You have three days. Your word processor now has a built-in \"Rewrite\" button, and a chatbot is a tab away.",
+      "learningGoal": "Learning to see where your own reasoning is thin and how to develop it, which is the core skill of revision.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "What's the difference between editing a draft and revising it? Which did your choice lead you to do?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you keep, change, or discard, and why?",
+        "Would the revision be meaningfully different if you hadn't used AI? How?"
+      ],
+      "choices": [
+        {
+          "id": "b",
+          "text": "Ask AI to point out which claims seem least supported, without rewriting anything. Then decide for yourself what to add, and log it.",
+          "usesAI": true,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "This uses AI as a diagnostic reader while you do the revising. Compare what it flags with your instructor's comments: where do they agree, and where does AI miss what a human reader noticed? That comparison is exactly the log question about how AI processes language. Developing the claims yourself is the part that transfers.",
+          "policyLink": "A model log entry: what you asked, what it flagged, what you acted on and why.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Paste the whole draft into a chatbot with \"make this argument more developed,\" then submit what it gives you.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "ownership": -2,
+            "disclosure": -2
+          },
+          "feedback": "This hands the revision to AI, and submitting its version without a log entry is undisclosed AI writing. Even logged, the paper would no longer reflect your thinking, and AI \"development\" often means adding confident-sounding claims with no sources behind them. Revision is where most of the learning in a writing course happens, and this skips all of it.",
+          "policyLink": "Without a log entry, this violates the Golden Rule. With one, it still fails \"the ideas you submit reflect your own thinking.\"",
+          "ethicsNote": null,
+          "flags": [
+            "ai-revision"
+          ]
+        },
+        {
+          "id": "d",
+          "text": "Use your word processor's built-in \"Rewrite\" suggestions on the weak paragraphs. It's just a writing feature, so it doesn't need a log entry.",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "ownership": -1,
+            "disclosure": -2
+          },
+          "feedback": "Built-in rewrite and \"help me write\" features are generative AI, and the course policy names \"the writing assistants embedded in many platforms\" explicitly. They need a log entry like any chatbot. Rewording also polishes sentences without developing ideas, so it doesn't address what your instructor asked for. Skipping the log would turn this into undisclosed AI writing.",
+          "policyLink": "Generative AI includes \"the writing assistants embedded in many platforms.\" Log it.",
+          "ethicsNote": null,
+          "flags": [
+            "unlogged-rewrite"
+          ]
+        },
+        {
+          "id": "c",
+          "text": "Visit the University Writing Center with your instructor's comments and revise from that conversation.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "A writing consultant can ask you questions (\"What do you mean here? Why does this matter?\") that pull the development out of your own head, which is something AI can't do the same way. It takes planning, but three days is enough. A strong choice with no AI.",
+          "policyLink": "Choosing not to use AI is never penalized. Note the choice in your GenAI log.",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ],
+      "echoes": [
+        {
+          "ifFlags": [
+            "undisclosed-intro"
+          ],
+          "text": "Your instructor's comments also say your introduction \"doesn't sound like the rest of your paper.\""
+        },
+        {
+          "ifFlags": [
+            "cited-instead-of-logged"
+          ],
+          "text": "Your instructor's note to the class includes a reminder: the GenAI log, not a works cited entry, is how you disclose AI use in this course."
+        }
+      ]
+    },
+    {
+      "id": "consequence-conference",
+      "type": "consequence",
+      "stage": "Consequence",
+      "title": "The conference",
+      "icon": "chat",
+      "character": {
+        "name": "Jordan",
+        "role": "your peer-review partner"
+      },
+      "setup": "You wait on a bench outside your instructor's office, knee bouncing, your printed draft rolled into a tube. Jordan walks out from their own conference, gives you a small thumbs-up, and mouths \"you got this.\"",
+      "trigger": {
+        "anyFlags": [
+          "undisclosed-intro",
+          "ai-revision",
+          "unlogged-rewrite"
+        ]
+      },
+      "assignment": "Unit 2: End-of-unit conference with your instructor",
+      "situation": "At your end-of-unit conference, your instructor points to a few sections that don't sound like the rest of your writing. They ask you to walk them through how you wrote those sections.",
+      "learningGoal": "Giving an honest account of your own process, which is the reflective habit the GenAI log is meant to build.",
+      "preReflectPrompt": "In one sentence, why is this the move you'd make?",
+      "postReflectPrompt": "What would you want your instructor to understand about how those sections got written? What would make it easier to be open about AI use from the start next time?",
+      "logQuestions": [
+        "What did you ask AI to do, and what did it produce?",
+        "What did you keep, change, or discard, and why?",
+        "Would those sections be meaningfully different if you hadn't used AI? How?"
+      ],
+      "choices": [
+        {
+          "id": "b",
+          "text": "Say \"I just used the built-in rewrite tool. It's basically spellcheck.\"",
+          "usesAI": true,
+          "rating": "shortcut",
+          "scores": {
+            "ownership": -1,
+            "disclosure": -1
+          },
+          "feedback": "Built-in rewrite features are generative AI, and the policy names \"the writing assistants embedded in many platforms\" directly. Downplaying the tool isn't the same as disclosing what it did, and your instructor has already noticed the difference in the writing. If those passages were AI-written and never logged, that's still a Golden Rule problem, whatever the tool is called. Describing what it actually changed is a better place to start.",
+          "policyLink": "Generative AI includes \"the writing assistants embedded in many platforms,\" and AI-generated writing without a log entry violates the Golden Rule.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "d",
+          "text": "Ask if you can rewrite those sections yourself, in your own voice, and log what happened with the original versions.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 2,
+            "disclosure": 2
+          },
+          "feedback": "You're offering repair, not just an explanation. Rewriting the sections shows you can do the thinking they were supposed to show, and logging the originals keeps the record honest. Comparing your rewrite with the AI version is also a direct look at how AI writes compared to how you do.",
+          "policyLink": "\"Your own voice and your own thinking come first and foremost.\" Log both versions and answer the five questions honestly.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "a",
+          "text": "Explain honestly what AI did in those sections and offer to complete the missing log entries right now.",
+          "usesAI": false,
+          "rating": "transfers",
+          "scores": {
+            "ownership": 0,
+            "disclosure": 2
+          },
+          "feedback": "This is the conversation the conference is for. Your instructor is asking because they want to understand your process, and an honest account gives you both something to work with. Completing the entries now turns a gap into reflection, and thinking about why those sections sounded different teaches you something about your own voice.",
+          "policyLink": "The log \"is not a punishment or a surveillance mechanism. It is a structured practice of the metacognitive reflection\" the course is built on.",
+          "ethicsNote": null,
+          "flags": []
+        },
+        {
+          "id": "c",
+          "text": "Insist that you wrote every word yourself.",
+          "usesAI": true,
+          "rating": "line",
+          "scores": {
+            "ownership": -2,
+            "disclosure": -2
+          },
+          "feedback": "Denying AI use that happened conceals it, and that is exactly what the policy treats as an integrity violation. It also closes the door your instructor is holding open: right now this is a conversation about process, and a denial turns it into a conversation about honesty. It's not too late to say what actually happened.",
+          "policyLink": "\"Submitting AI-generated writing as your own without a corresponding log entry is a violation of UCF's Golden Rule.\"",
+          "ethicsNote": null,
+          "flags": []
+        }
+      ]
+    }
+  ]
+}

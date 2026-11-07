@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Should I Use AI Here? (v4)</title>
+  <meta name="description" content="A decision game about when and how to use generative AI in ENC 1102.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body>
+  <header class="topbar">
+    <a class="brand" href="./" aria-label="Should I Use AI Here? home">Should I Use AI Here?</a>
+    <div class="topbar-actions">
+      <span id="progress" class="progress" aria-live="polite"></span>
+      <button type="button" id="policy-btn" class="link-btn">Course policy</button>
+    </div>
+  </header>
+
+  <p id="storage-warning" class="storage-warning" hidden>
+    Your browser is blocking local storage, so progress won't be saved if you leave this page. Export your work before closing it.
+  </p>
+
+  <main id="app" tabindex="-1">
+    <p class="loading">Loading scenarios…</p>
+  </main>
+
+  <div id="announcer" class="visually-hidden" aria-live="polite"></div>
+
+  <dialog id="policy-dialog" aria-labelledby="policy-title">
+    <div class="dialog-inner">
+      <div class="dialog-head">
+        <h2 id="policy-title">Generative AI Policy Statement</h2>
+        <button type="button" class="link-btn" id="policy-close">Close</button>
+      </div>
+      <div id="policy-body"></div>
+    </div>
+  </dialog>
+
+  <footer class="foot">
+    <span>ENC 1102 · v4 · Your progress is saved only in this browser.</span>
+    <a href="../">All versions</a>
+  </footer>
+
+  <script src="app.js"></script>
+</body>
+</html>

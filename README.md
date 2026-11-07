@@ -13,7 +13,7 @@ Each version lives in its own folder and stays playable. The root `index.html` l
 | `v1/` | MVP: 6 scenarios, graded feedback, required reflections, mock GenAI log entries, localStorage progress, export |
 | `v2/` | Consequences: earlier choices show up in later scenes, 3 consequence scenes that appear only on certain paths, and a path timeline end screen |
 | `v3/` | Scoring: points per rating, a profile across ownership of ideas, verification, and honest disclosure, and scene variants (fixes the Research topic and the Pitch slide-deck choice from v2) |
-| `v4/` | (planned) Full results screen |
+| `v4/` | Characters and results: a named student and short setup in every scene, scene icons, a step progress bar, small transitions, and a results page with a writer type, a takeaway per pattern, and practice replays (scoring unchanged from v3) |
 | `v5/` | (planned) Teacher mode for adding and editing scenarios |
 
 ## How it plays (all versions)
@@ -56,13 +56,24 @@ A full playthrough is 6 to 9 scenes depending on your choices.
 - **Clearer Pitch rating.** In *Pitch it in two minutes*, the slide-deck choice now says exactly what earns its *Works* rating (you rewrite the speaker notes, cut slides, and log it), and the feedback explains why it's *Works* rather than *Transfers well*.
 - The export and print view include your points and profile.
 
+## What v4 adds: characters and a results page
+
+- **Scene openers.** Every scene starts with a short setup featuring one of four classmates: Maya (your roommate), Luis (a classmate), Priya (your study-group friend), and Jordan (your peer-review partner). The situation, choices, and feedback are the same as v3.
+- **Light visual polish.** Each scene has an icon. The progress bar has one segment per scene on your path (consequence scenes join it when they're triggered). Cards fade in and feedback drops in, but only when your device hasn't asked for reduced motion.
+- **A results page.** The end screen now opens with:
+  - **Your writer type**, from your profile: *The Author* (every pattern Strong), *The Original Thinker*, *The Fact-Checker*, or *The Open Book* (your strongest pattern when at least one is Strong), *The Balancer* (nothing Strong and nothing Needs attention), or *The Deadline Writer* (otherwise). It describes the playthrough, not the player, and it isn't a grade.
+  - **A takeaway for each pattern**, matched to its band, plus the scene where it showed most (your best moment if Strong, otherwise the scene with the most room to grow).
+  - **Scenes to replay**: up to three scenes where another choice earns more points, ranked by points left on the table. **Practice replay** lets you try any choice in a finished scene and read its feedback. Nothing is saved, so your recorded choice, points, and profile don't change. Every scene on the path has a practice button too.
+- **Scoring is unchanged.** Points, profile bars, and bands are computed exactly as in v3, from the same ratings and scores.
+- The export and print view include your writer type, takeaways, and the scenes to replay.
+
 ## Your data
 
-Progress and reflections are stored in this browser's `localStorage` under a per-version key (`shouldIUseAI.v1`, `shouldIUseAI.v2`, `shouldIUseAI.v3`), so versions don't overwrite each other. Nothing is sent anywhere. Clearing site data or switching browsers/devices loses progress, so export before you submit.
+Progress and reflections are stored in this browser's `localStorage` under a per-version key (`shouldIUseAI.v1` through `shouldIUseAI.v4`), so versions don't overwrite each other. Nothing is sent anywhere. Clearing site data or switching browsers/devices loses progress, so export before you submit.
 
 ## Editing scenarios
 
-Each version has its own data: `v3/data/scenarios.json` and `v3/data/policy.json` for the current version (earlier versions' are in `v1/data/` and `v2/data/`). Each scene has a stage, assignment, situation, learning goal, reflection prompts, GenAI log questions, and choices. Each choice has `text`, `usesAI`, `rating` (`transfers`, `works`, `shortcut`, or `line`), `feedback`, and an optional `policyLink` and `ethicsNote`.
+Each version has its own data: `v4/data/scenarios.json` and `v4/data/policy.json` for the current version (earlier versions' are in `v1/data/`, `v2/data/`, and `v3/data/`). Each scene has a stage, assignment, situation, learning goal, reflection prompts, GenAI log questions, and choices. Each choice has `text`, `usesAI`, `rating` (`transfers`, `works`, `shortcut`, or `line`), `feedback`, and an optional `policyLink` and `ethicsNote`.
 
 v2 adds three fields for consequences:
 
@@ -76,13 +87,21 @@ v3 adds:
 - `points` and `dimensions` in `policy.json`: the points per rating and the list of dimensions (`id`, `label`, `description`). Change them there to retune scoring.
 - `variants` on a scene: `[{ "ifFlags": ["ai-topic"], "situation": "...", "choices": { "b": { "feedback": "..." } } }]`. The first variant whose flag an earlier choice set replaces the situation and the `text` or `feedback` of the listed choices. Ratings, flags, and scores can't be changed by a variant, so every player's choices stay comparable.
 
+v4 adds (all optional, presentation only):
+
+- `icon` on a scene: one of `lightbulb`, `books`, `moon`, `list`, `alert`, `people`, `mic`, `pencil`, `chat`.
+- `character` on a scene: `{ "name": "Maya", "role": "your roommate" }`.
+- `setup` on a scene: one or two sentences shown before the situation. A variant can also replace `setup`.
+- `takeaways` on each dimension in `policy.json`: `{ "strong": "...", "mixed": "...", "needs": "..." }`.
+- `writerTypes` in `policy.json`: the label, summary, and "try next" line for `author`, `ownership`, `verification`, `disclosure`, `balancer`, and `deadline`. The rule that picks one is fixed in `app.js` (`writerTypeFor`).
+
 Choices appear in the order they're listed, lettered A to D. In v3 each scene's order is set by hand so the strongest and weakest options don't always land in the same position. Choice ids don't have to follow that order; ids are what saved progress, variants, and exports refer to.
 
 Scenes play in list order. The game checks the file when it loads and shows an error if something is missing. It also warns in the browser console if an echo or trigger names a flag no earlier choice sets, which is usually a typo.
 
 ## Running it
 
-On GitHub Pages: Settings → Pages → Deploy from a branch → choose the branch and the root folder. The landing page is at the site root, with each version in its folder (`/v1/`, `/v2/`, `/v3/`).
+On GitHub Pages: Settings → Pages → Deploy from a branch → choose the branch and the root folder. The landing page is at the site root, with each version in its folder (`/v1/` through `/v4/`).
 
 Locally, `fetch()` needs a web server rather than `file://`:
 
