@@ -528,3 +528,6 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 .path-node.is-consequence .path-dot .icon { transform: rotate(-45deg); }
 .path-body .finish-side { flex-wrap: wrap; gap: 8px; }
 @media print { .results-hero { box-shadow: none; border: 1px solid #999; } .replays { display: none; } }
+/* Keep consequence dots on the timeline; the body's purple edge marks them instead. */
+.path-node.is-consequence { margin-left: 0; }
+.path-node.is-consequence .path-body { margin-left: 8px; }
