@@ -582,12 +582,12 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 @media print { .teacher-nav, .loader, #csv-btn, #clear-btn, [data-remove] { display: none !important; } }
 .loader textarea.ruled { font: .85rem/var(--line-h) ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
 .drop-zone label.btn { display: inline-flex; align-items: center; flex: 0 0 auto; }
-/* On phones, each choice becomes a block: its text on top, then rating, scores and count. */
+/* On phones, each table row becomes a block: the first cell on top, the rest after it. */
 @media (max-width: 599px) {
-  .choice-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
-  .choice-table tr { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 10px 0; border-bottom: 1px solid var(--paper-edge); }
-  .choice-table td { border: 0; padding: 0; }
-  .choice-table td:first-child { flex: 1 0 100%; }
-  .choice-table td[data-label]:not(:has(.pill))::before { content: attr(data-label) ": "; color: var(--ink-soft); }
+  .stack-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .stack-table tr { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 10px 0; border-bottom: 1px solid var(--paper-edge); }
+  .stack-table th, .stack-table td { border: 0; padding: 0; }
+  .stack-table tr > :first-child { flex: 1 0 100%; }
+  .stack-table td[data-label]:not(:has(.pill))::before { content: attr(data-label) ": "; color: var(--ink-soft); }
   .choice-table td.count-cell { flex: 1 0 100%; }
 }

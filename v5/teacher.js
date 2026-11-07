@@ -76,38 +76,49 @@
 
   // ---------- parsing exports ----------
   // Returns { records: [...], problems: [...] } for one pasted text or file.
+  // Each export is read from its data block when that block is intact, and from its Markdown
+  // otherwise (v4 files, text copied from a rendered view, or a damaged or cut-off block).
   function parseText(text, source) {
     const records = [];
     const problems = [];
     const src = String(text || "");
     const tagRe = new RegExp(`<!--\\s*${DATA_TAG.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}\\s+([\\s\\S]*?)\\s*-->`, "g");
-    let m, found = 0;
-    while ((m = tagRe.exec(src))) {
-      found++;
-      try { records.push(fromV5(JSON.parse(m[1]), source)); }
-      catch { problems.push(`${source}: one export's results block couldn't be read. It may have been edited or cut off.`); }
-    }
+    const blocks = (t) => [...t.matchAll(tagRe)].map((m) => { try { return JSON.parse(m[1]); } catch { return null; } });
 
     // A whole file of JSON (one export's data, or a list of them).
-    if (!found && /^\s*[[{]/.test(src)) {
+    if (/^\s*[[{]/.test(src)) {
       try {
         const j = JSON.parse(src);
         for (const p of Array.isArray(j) ? j : [j]) records.push(fromV5(p, source));
         return { records, problems };
-      } catch { /* fall through to Markdown */ }
+      } catch { /* not JSON after all; read it as exports below */ }
     }
 
-    // Exports without a data block (v4, or text pasted without the end of the file).
-    const chunks = src.split(/^(?=# Should I Use AI Here\? \(v\d+\))/m).filter((c) => /^# Should I Use AI Here\? \(v\d+\)/.test(c));
+    const HEAD = /^# Should I Use AI Here\? \(v\d+\)/;
+    const chunks = src.split(/^(?=# Should I Use AI Here\? \(v\d+\))/m);
     for (const chunk of chunks) {
-      if (chunk.includes(DATA_TAG)) continue;
-      records.push(fromMarkdown(chunk, source));
+      const hasHead = HEAD.test(chunk);
+      const good = blocks(chunk).filter(Boolean);
+      const damaged = chunk.includes(DATA_TAG) && !good.length;
+      let used = false;
+      for (const p of good) {
+        try { records.push(fromV5(p, source)); used = true; } catch { /* fall back below */ }
+      }
+      if (used) continue;
+      if (hasHead) {
+        const r = fromMarkdown(chunk, source);
+        if (damaged) r.warnings.push("Its results block was damaged, so this was read from the text instead.");
+        records.push(r);
+      } else if (damaged) {
+        problems.push(`${source}: one export's results block couldn't be read, and the rest of that export is missing.`);
+      }
     }
     if (!records.length && !problems.length) {
       problems.push(`${source}: no exported results found. Use the Markdown file from the game's Download button, or text from Copy text.`);
     }
     return { records, problems };
   }
+
 
   function blankRecord(source, version) {
     return { id: nextId++, source, version, name: "", startedAt: "", complete: false, points: 0, possible: 0,
@@ -122,7 +133,8 @@
     r.complete = !!p.complete;
     r.points = Number(p.points) || 0;
     r.possible = Number(p.possible) || 0;
-    r.writerType = typeof p.writerType === "string" && p.writerType ? p.writerType : null;
+    r.writerType = typeof p.writerType === "string" && writerTypes()[p.writerType] ? p.writerType : null;
+    if (p.writerType && !r.writerType) r.warnings.push("Its writer type isn't one this version knows.");
     for (const d of Array.isArray(p.dims) ? p.dims : []) {
       if (d && typeof d.id === "string") r.dims[d.id] = { pct: Number.isFinite(d.pct) ? d.pct : null, band: d.band || null };
     }
@@ -134,6 +146,7 @@
       r.path.push({ sceneId: s.id, choiceId: c ? c.id : null, done: !!st.done && !!c });
       if (c && st.rating && st.rating !== c.rating) r.warnings.push(`The rating recorded for ${s.title} doesn't match this version's scenes.`);
     }
+    if (r.complete && !r.path.some((x) => x.choiceId)) { r.complete = false; r.warnings.push("Marked finished, but no answered scenes could be read."); }
     return r;
   }
 
@@ -181,12 +194,14 @@
     return r;
   }
 
+  // Two exports are the same playthrough when the name and every recorded choice match.
+  const recordKey = (r) => `${norm(r.name)}|${r.path.map((p) => `${p.sceneId}:${p.choiceId || "-"}`).join(",")}`;
+
   function addText(text, source) {
     const { records, problems } = parseText(text, source);
     const fresh = [];
     for (const rec of records) {
-      const key = `${norm(rec.name)}|${rec.startedAt}`;
-      const dupe = students.find((s) => `${norm(s.name)}|${s.startedAt}` === key && rec.name);
+      const dupe = students.find((s) => recordKey(s) === recordKey(rec));
       if (dupe) { problems.push(`${source}: ${rec.name || "an export"} was already loaded, so it was skipped.`); continue; }
       if (!rec.name) rec.name = `Unnamed student ${rec.id}`;
       students.push(rec);
@@ -210,6 +225,9 @@
 
     const pointsPct = avg(complete.filter((r) => r.possible > 0).map((r) => (r.points / r.possible) * 100));
 
+    // A scene only a student or two reached (a consequence scene, say) can't say much about
+    // the class, so rank scenes and choices at least three students answered (or everyone, in a tiny class).
+    const minN = Math.min(3, answered.length);
     const scenes = data.scenarios.map((s, i) => {
       const picks = answered.flatMap((r) => r.path.filter((p) => p.sceneId === s.id && p.choiceId));
       const top = Math.max(...s.choices.map((c) => pointsFor(c.rating)));
@@ -219,11 +237,8 @@
       return { s, i, n: picks.length, reached, top, avgPts: avg(earned), avgPct: picks.length ? pct(earned.reduce((a, b) => a + b, 0), top * picks.length) : null, choices };
     });
 
-    // A scene only a student or two reached (a consequence scene, say) can't say much about
-    // the class, so rank scenes at least three students answered (or everyone, in a tiny class).
-    const minN = Math.min(3, answered.length);
     const hardest = scenes.filter((x) => x.n > 0 && x.n >= minN).sort((a, b) => a.avgPct - b.avgPct || b.n - a.n || a.i - b.i).slice(0, 3);
-    const hardChoices = scenes.flatMap((x) => x.choices
+    const hardChoices = scenes.filter((x) => x.n >= minN).flatMap((x) => x.choices
       .filter(({ c, n }) => n > 0 && (c.rating === "shortcut" || c.rating === "line"))
       .map(({ c, n }) => ({ scene: x, c, n, share: pct(n, x.n) })))
       .sort((a, b) => b.share - a.share || b.n - a.n)
@@ -369,7 +384,7 @@
     return `
       <details class="choices-detail" ${counts ? "open" : ""}>
         <summary>${counts ? "How the class chose" : "Choices and ratings"}</summary>
-        <div class="table-wrap"><table class="teacher-table choice-table">
+        <div class="table-wrap"><table class="teacher-table choice-table stack-table">
           <thead><tr><th scope="col">Choice</th><th scope="col">Rating</th>${pats.map((d) => `<th scope="col">${esc(d.label)}</th>`).join("")}${counts ? '<th scope="col">Students</th>' : ""}</tr></thead>
           <tbody>${s.choices.map((c, i) => {
             const n = counts ? counts.find((x) => x.c.id === c.id).n : 0;
@@ -415,9 +430,9 @@
       return `
         <tr>
           <th scope="row">${esc(r.name)}</th>
-          <td>${r.complete ? "Finished" : `In progress (${answered} of ${r.path.length})`}${r.version !== 5 ? ` <span class="hint">v${esc(r.version)}</span>` : ""}</td>
-          <td>${esc(t) || '<span class="hint">–</span>'}</td>
-          <td class="num">${r.possible ? `${r.points} / ${r.possible}` : "–"}</td>
+          <td data-label="Status">${r.complete ? "Finished" : `In progress (${answered} of ${r.path.length})`}${r.version !== 5 ? ` <span class="hint">v${esc(r.version)}</span>` : ""}</td>
+          <td data-label="Writer type">${esc(t) || '<span class="hint">–</span>'}</td>
+          <td class="num" data-label="Points">${r.possible ? `${r.points} / ${r.possible}` : "–"}</td>
           <td>${r.warnings.length ? `<details class="warn"><summary>${plural(r.warnings.length, "note")}</summary><ul>${r.warnings.map((w) => `<li>${esc(w)}</li>`).join("")}</ul></details>` : ""}</td>
           <td><button type="button" class="btn small ghost" data-remove="${r.id}">Remove<span class="visually-hidden"> ${esc(r.name)}</span></button></td>
         </tr>`;
@@ -462,7 +477,7 @@
       <p class="lede">${plural(students.length, "student")} loaded, ${nC} finished. Writer types and profiles count finished playthroughs only; scene results count every answered scene.</p>
       ${loader}
       <h2 class="small-h">Students</h2>
-      <div class="table-wrap"><table class="teacher-table roster">
+      <div class="table-wrap"><table class="teacher-table roster stack-table">
         <thead><tr><th scope="col">Name</th><th scope="col">Status</th><th scope="col">Writer type</th><th scope="col">Points</th><th scope="col">Notes</th><th scope="col"><span class="visually-hidden">Remove</span></th></tr></thead>
         <tbody>${roster}</tbody>
       </table></div>
@@ -482,22 +497,23 @@
         <p class="hint">Lowest average points as a share of the best choice's points${sum.minN > 1 ? `, among scenes at least ${sum.minN} students answered` : ""}.</p>
         <ol class="teacher-list numbered">${hardest}</ol>` : ""}
       <h2 class="small-h">Hardest choices</h2>
-      ${hardChoices ? `<p class="hint">The ${esc(ratingLabel("shortcut"))} and ${esc(ratingLabel("line"))} choices picked by the largest share of the students who saw them.</p>
+      ${hardChoices ? `<p class="hint">The ${esc(ratingLabel("shortcut"))} and ${esc(ratingLabel("line"))} choices picked by the largest share of the students who saw them${sum.minN > 1 ? `, in scenes at least ${sum.minN} students answered` : ""}.</p>
         <ul class="teacher-list">${hardChoices}</ul>`
-        : `<p class="hint">No one picked a ${esc(ratingLabel("shortcut"))} or ${esc(ratingLabel("line"))} choice.</p>`}
+        : `<p class="hint">No ${esc(ratingLabel("shortcut"))} or ${esc(ratingLabel("line"))} choices to show yet.</p>`}
       <h2 class="small-h">Scene by scene</h2>
       ${sceneCards}`;
   }
 
   function wireClass() {
     const status = (msg) => { $("#load-status").textContent = msg; };
-    const finish = (added, problems) => {
+    // Re-render, put focus back on the control that was used, and show the result in the
+    // load-status live region (which announces it, so it isn't also sent to #announcer).
+    const finish = (added, problems, focusSel) => {
       render();
-      const msg = `${added ? `Added ${plural(added, "student")}.` : "No new students added."}${problems.length ? ` ${problems.join(" ")}` : ""}`;
-      $("#load-status").textContent = msg;
-      announce(msg);
+      $(focusSel)?.focus();
+      $("#load-status").textContent = `${added ? `Added ${plural(added, "student")}.` : "No new students added."}${problems.length ? ` ${problems.join(" ")}` : ""}`;
     };
-    const readFiles = async (files) => {
+    const readFiles = async (files, focusSel) => {
       let added = 0;
       const problems = [];
       for (const f of files) {
@@ -508,25 +524,24 @@
           added += r.added; problems.push(...r.problems);
         } catch { problems.push(`${f.name}: couldn't be read.`); }
       }
-      finish(added, problems);
+      finish(added, problems, focusSel);
     };
-    $("#file-input").addEventListener("change", (e) => { readFiles([...e.target.files]); });
+    $("#file-input").addEventListener("change", (e) => { readFiles([...e.target.files], "#file-input"); });
     const zone = $("#drop-zone");
     zone.addEventListener("dragover", (e) => { e.preventDefault(); zone.classList.add("over"); });
     zone.addEventListener("dragleave", () => zone.classList.remove("over"));
-    zone.addEventListener("drop", (e) => { e.preventDefault(); zone.classList.remove("over"); readFiles([...(e.dataTransfer?.files || [])]); });
+    zone.addEventListener("drop", (e) => { e.preventDefault(); zone.classList.remove("over"); readFiles([...(e.dataTransfer?.files || [])], "#file-input"); });
     $("#paste-add").addEventListener("click", () => {
       const text = $("#paste-box").value;
       if (!text.trim()) { status("Paste an export first."); return; }
       const r = addText(text, "Pasted text");
-      finish(r.added, r.problems);
+      finish(r.added, r.problems, "#paste-add");
     });
     app.querySelectorAll("[data-remove]").forEach((b) => b.addEventListener("click", () => {
       const r = students.find((s) => s.id === Number(b.dataset.remove));
       students = students.filter((s) => s !== r);
-      render();
+      render({ focus: true });
       announce(`Removed ${r?.name || "student"}.`);
-      $("#view-title").focus();
     }));
     $("#clear-btn")?.addEventListener("click", () => {
       if (!confirm("Remove every loaded student from this page? Their files aren't affected.")) return;
@@ -597,6 +612,11 @@
     }
     tab = fromHash();
     render();
+  }
+
+  // A file dropped anywhere but the drop zone would otherwise open in the tab.
+  for (const ev of ["dragover", "drop"]) {
+    document.addEventListener(ev, (e) => { if (e.dataTransfer?.types?.includes("Files") && !e.target.closest?.("#drop-zone")) e.preventDefault(); });
   }
 
   // Warn before leaving if students are loaded, since nothing is saved.
