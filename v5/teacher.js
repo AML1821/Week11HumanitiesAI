@@ -219,14 +219,17 @@
       return { s, i, n: picks.length, reached, top, avgPts: avg(earned), avgPct: picks.length ? pct(earned.reduce((a, b) => a + b, 0), top * picks.length) : null, choices };
     });
 
-    const hardest = scenes.filter((x) => x.n > 0).sort((a, b) => a.avgPct - b.avgPct || b.n - a.n || a.i - b.i).slice(0, 3);
+    // A scene only a student or two reached (a consequence scene, say) can't say much about
+    // the class, so rank scenes at least three students answered (or everyone, in a tiny class).
+    const minN = Math.min(3, answered.length);
+    const hardest = scenes.filter((x) => x.n > 0 && x.n >= minN).sort((a, b) => a.avgPct - b.avgPct || b.n - a.n || a.i - b.i).slice(0, 3);
     const hardChoices = scenes.flatMap((x) => x.choices
       .filter(({ c, n }) => n > 0 && (c.rating === "shortcut" || c.rating === "line"))
       .map(({ c, n }) => ({ scene: x, c, n, share: pct(n, x.n) })))
       .sort((a, b) => b.share - a.share || b.n - a.n)
       .slice(0, 5);
 
-    return { answered, complete, types, dims, pointsPct, scenes, hardest, hardChoices };
+    return { answered, complete, types, dims, pointsPct, scenes, hardest, hardChoices, minN };
   }
 
   // ---------- rendering ----------
@@ -366,15 +369,15 @@
     return `
       <details class="choices-detail" ${counts ? "open" : ""}>
         <summary>${counts ? "How the class chose" : "Choices and ratings"}</summary>
-        <div class="table-wrap"><table class="teacher-table">
+        <div class="table-wrap"><table class="teacher-table choice-table">
           <thead><tr><th scope="col">Choice</th><th scope="col">Rating</th>${pats.map((d) => `<th scope="col">${esc(d.label)}</th>`).join("")}${counts ? '<th scope="col">Students</th>' : ""}</tr></thead>
           <tbody>${s.choices.map((c, i) => {
             const n = counts ? counts.find((x) => x.c.id === c.id).n : 0;
             return `<tr>
               <td><strong>${String.fromCharCode(65 + i)}.</strong> ${esc(c.text)}${c.usesAI ? ' <span class="hint">(uses AI)</span>' : ""}</td>
-              <td><span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}</span></td>
-              ${pats.map((d) => `<td class="num">${fmt(c.scores?.[d.id])}</td>`).join("")}
-              ${counts ? `<td class="num">${n}${total ? ` <span class="hint">(${pct(n, total)}%)</span>` : ""}${total ? bar(pct(n, total), `Choice ${String.fromCharCode(65 + i)}`) : ""}</td>` : ""}
+              <td data-label="Rating"><span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}</span></td>
+              ${pats.map((d) => `<td class="num" data-label="${esc(d.label)}">${fmt(c.scores?.[d.id])}</td>`).join("")}
+              ${counts ? `<td class="num count-cell" data-label="Students">${n}${total ? ` <span class="hint">(${pct(n, total)}%)</span>` : ""}${total ? bar(pct(n, total), `Choice ${String.fromCharCode(65 + i)}`) : ""}</td>` : ""}
             </tr>`;
           }).join("")}</tbody>
         </table></div>
@@ -476,7 +479,7 @@
         : `<p class="hint">No one has finished yet, so there are no writer types or profiles to summarize.</p>`}
       ${hardest ? `
         <h2 class="small-h">Hardest scenes</h2>
-        <p class="hint">Lowest average points as a share of the best choice's points.</p>
+        <p class="hint">Lowest average points as a share of the best choice's points${sum.minN > 1 ? `, among scenes at least ${sum.minN} students answered` : ""}.</p>
         <ol class="teacher-list numbered">${hardest}</ol>` : ""}
       <h2 class="small-h">Hardest choices</h2>
       ${hardChoices ? `<p class="hint">The ${esc(ratingLabel("shortcut"))} and ${esc(ratingLabel("line"))} choices picked by the largest share of the students who saw them.</p>

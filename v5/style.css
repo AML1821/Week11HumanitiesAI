@@ -550,7 +550,7 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 .teacher-list li { margin-bottom: 6px; }
 .teacher-list .hint { display: block; }
 .teacher-list .pill { margin-right: 4px; }
-.table-wrap { overflow-x: auto; margin: 8px 0 14px; -webkit-overflow-scrolling: touch; }
+.table-wrap { position: relative; overflow-x: auto; margin: 8px 0 14px; -webkit-overflow-scrolling: touch; }
 .teacher-table { border-collapse: collapse; width: 100%; font: .9rem/1.4 var(--font-ui); }
 .teacher-table th, .teacher-table td { text-align: left; vertical-align: top; padding: 8px 8px; border-bottom: 1px solid var(--paper-edge); }
 .teacher-table thead th { font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
@@ -582,3 +582,12 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 @media print { .teacher-nav, .loader, #csv-btn, #clear-btn, [data-remove] { display: none !important; } }
 .loader textarea.ruled { font: .85rem/var(--line-h) ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
 .drop-zone label.btn { display: inline-flex; align-items: center; flex: 0 0 auto; }
+/* On phones, each choice becomes a block: its text on top, then rating, scores and count. */
+@media (max-width: 599px) {
+  .choice-table thead { position: absolute; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .choice-table tr { display: flex; flex-wrap: wrap; gap: 4px 14px; padding: 10px 0; border-bottom: 1px solid var(--paper-edge); }
+  .choice-table td { border: 0; padding: 0; }
+  .choice-table td:first-child { flex: 1 0 100%; }
+  .choice-table td[data-label]:not(:has(.pill))::before { content: attr(data-label) ": "; color: var(--ink-soft); }
+  .choice-table td.count-cell { flex: 1 0 100%; }
+}
