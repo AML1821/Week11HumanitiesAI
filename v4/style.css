@@ -495,3 +495,36 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
   .avatar { border: 1px solid CanvasText; }
 }
 @media print { .stepbar, .scene-icon { display: none; } }
+
+/* ---------- v4: results page ---------- */
+.results-hero {
+  margin: 8px 0 18px; padding: 18px 18px 14px; border-radius: 4px 4px 18px 4px;
+  background: var(--note); color: var(--note-ink); box-shadow: 0 2px 0 var(--note-shadow), 0 12px 20px -12px var(--note-shadow);
+}
+.results-hero .hint { color: inherit; opacity: .85; margin: 0; }
+.writer-type { font: 700 1.9rem/1.15 var(--font-body); margin: 0 0 8px; }
+.try-next { font-size: .97rem; }
+.takeaway { margin: 8px 0 2px; font-size: .95rem; }
+.takeaway-where { margin: 0; font: .85rem/1.4 var(--font-ui); color: var(--ink-soft); }
+.replays { margin: 8px 0 22px; }
+.replay-list { list-style: none; padding: 0; margin: 0; display: grid; gap: 10px; }
+.replay { display: flex; gap: 12px; align-items: flex-start; padding: 12px; border: 2px solid var(--paper-edge); border-radius: 8px; }
+.replay .finish-title { margin: 0 0 4px; }
+.replay .label-sm { display: block; }
+.replay-body { min-width: 0; }
+.replay-body .hint { margin-bottom: 8px; }
+.scene-icon.small { width: 36px; height: 36px; font-size: 18px; }
+.practice-banner {
+  font: 600 .88rem/1.4 var(--font-ui); padding: 8px 12px; border-radius: 6px;
+  border: 1px dashed var(--accent); color: var(--ink); background: color-mix(in srgb, var(--note) 40%, var(--paper));
+}
+/* Path dots carry the scene icon in v4. */
+.path-node { padding-left: 38px; }
+.path-node::before { left: 12px; top: 28px; }
+.path-dot {
+  width: 26px; height: 26px; top: 0; border-width: 2px; color: var(--ink-soft);
+  display: flex; align-items: center; justify-content: center; font-size: 14px;
+}
+.path-node.is-consequence .path-dot .icon { transform: rotate(-45deg); }
+.path-body .finish-side { flex-wrap: wrap; gap: 8px; }
+@media print { .results-hero { box-shadow: none; border: 1px solid #999; } .replays { display: none; } }

@@ -357,13 +357,14 @@
     if (view.name === "scenario") return renderScenario();
     if (view.name === "finish") return renderFinish();
     if (view.name === "explore") return renderExplore(view.sid);
+    if (view.name === "practice") return renderPractice(view.sid);
     if (view.name === "print") return renderPrint();
   }
 
   function updateProgress() {
     const el = $("#progress");
     if (view.name === "scenario") el.textContent = `Scene ${positionOf(state.currentIndex)} of ${pathLength()}`;
-    else if (view.name === "finish" || view.name === "explore") el.textContent = `${completedCount()} of ${pathLength()} done`;
+    else if (["finish", "explore", "practice"].includes(view.name)) el.textContent = `${completedCount()} of ${pathLength()} done`;
     else el.textContent = "";
   }
 
@@ -380,7 +381,7 @@
         <h1>Should I Use AI Here?</h1>
         <p class="lede">You'll face ${data.scenarios.filter((s) => !isConsequence(s)).length} real moments from a writing course. For each one, decide whether and how you'd use generative AI, explain why, and see how your choice plays out against the course policy.</p>
         <ul class="stage-list" aria-label="Stages">${stages}</ul>
-        <p class="new-note"><strong>New in version 3:</strong> scoring that isn't just right or wrong. Each choice earns points by how well it transfers, and at the end you'll see a profile of your patterns across ownership of ideas, verification, and honest disclosure. Your choices still follow you: earlier decisions show up in later scenes, and some lead to extra scenes.</p>
+        <p class="new-note"><strong>New in version 4:</strong> meet the classmates who share these moments with you, follow your path on a scene-by-scene progress bar, and finish with a results page: your writer type, a takeaway for each pattern, and scenes worth replaying for practice. Scoring works the same as version 3.</p>
         <div class="sticky-note">
           <p class="note-title">From the course policy</p>
           ${summary}
@@ -739,8 +740,9 @@
 
   // Points total, rating tally, and a bar per dimension (0-100%). Each bar's value is
   // written out as text beside it, so the bars themselves are decorative for screen readers.
-  function scoreBlockHtml(score, counts) {
+  function scoreBlockHtml(score, counts, { steps = null, animate = false } = {}) {
     const rows = score.dims.map((d) => {
+      const tk = steps ? takeawayFor(d, steps) : null;
       const measured = d.pct !== null;
       const where = measured ? `Measured in ${plural(d.scenes, "scene")} on your path.` : "None of the scenes on your path tested this.";
       return `
@@ -750,9 +752,11 @@
             <span class="profile-value">${measured ? `${d.pct}% · ` : ""}${esc(d.band)}</span>
           </div>
           <div class="profile-track" aria-hidden="true" ${measured ? `title="${esc(d.label)}: ${d.pct}%"` : ""}>
-            ${measured && d.pct > 0 ? `<span class="profile-fill" style="width:${d.pct}%"></span>` : ""}
+            ${measured && d.pct > 0 ? `<span class="profile-fill ${animate ? "grow" : ""}" style="width:${d.pct}%"></span>` : ""}
           </div>
           <p class="profile-desc">${d.description ? `${esc(d.description)} ` : ""}${esc(where)}</p>
+          ${tk?.text ? `<p class="takeaway"><strong>Takeaway:</strong> ${esc(tk.text)}</p>` : ""}
+          ${tk?.where ? `<p class="takeaway-where">${esc(tk.where.label)}: <strong>${esc(tk.where.stage)}</strong>, ${esc(tk.where.title)}</p>` : ""}
         </li>`;
     }).join("");
     return `
@@ -776,6 +780,103 @@
     return counts;
   }
 
+  // ---------- results (v4) ----------
+  // Everything here only reads scoreModel() and pathModel(); it never changes scoring.
+  const DEFAULT_WRITER_TYPES = {
+    author: { label: "The Author", summary: "You owned your ideas, checked your sources, and were open about your process.", next: "" },
+    ownership: { label: "The Original Thinker", summary: "Your strongest pattern is ownership of ideas.", next: "" },
+    verification: { label: "The Fact-Checker", summary: "Your strongest pattern is verification.", next: "" },
+    disclosure: { label: "The Open Book", summary: "Your strongest pattern is honest disclosure.", next: "" },
+    balancer: { label: "The Balancer", summary: "No single pattern stood out, and none held you back.", next: "" },
+    deadline: { label: "The Deadline Writer", summary: "Under pressure, shortcuts often won.", next: "" },
+  };
+
+  // Writer type from the profile bands of the patterns measured on this path:
+  // all Strong -> author; some Strong -> the strongest of those (ties go to the order in
+  // policy.json); none Strong and none Needs attention -> balancer; otherwise -> deadline.
+  function writerTypeFor(score) {
+    const measured = score.dims.filter((d) => d.pct !== null);
+    if (!measured.length) return null;
+    const strong = measured.filter((d) => d.band === "Strong");
+    let id;
+    if (strong.length === measured.length) id = "author";
+    else if (strong.length) id = strong.reduce((a, b) => (b.pct > a.pct ? b : a)).id;
+    else if (!measured.some((d) => d.band === "Needs attention")) id = "balancer";
+    else id = "deadline";
+    const types = { ...DEFAULT_WRITER_TYPES, ...(data.policy?.writerTypes || {}) };
+    return { id, ...(types[id] || DEFAULT_WRITER_TYPES.balancer) };
+  }
+
+  // Per pattern: the takeaway for its band, and the scene on the path where it showed most
+  // (a scene with the best available score if Strong, else the scene with the biggest gap).
+  function takeawayFor(d, steps) {
+    if (d.pct === null) return null;
+    const key = d.band === "Strong" ? "strong" : d.band === "Mixed" ? "mixed" : "needs";
+    const text = d.takeaways?.[key] || "";
+    let pick = null;
+    for (const st of steps) {
+      if (!st.c || !st.a?.done) continue;
+      const vals = st.s.choices.map((c) => c.scores?.[d.id] ?? 0);
+      if (!st.s.choices.some((c) => Number.isInteger(c.scores?.[d.id]))) continue;
+      const got = st.c.scores?.[d.id] ?? 0, gap = Math.max(...vals) - got;
+      if (key === "strong") { if (gap === 0 && got > 0 && !pick) pick = { st, gap }; }
+      else if (gap > 0 && (!pick || gap > pick.gap)) pick = { st, gap };
+    }
+    const where = pick ? { label: key === "strong" ? "Where it showed" : "Most room to grow", stage: stageName(pick.st.s), title: pick.st.s.title } : null;
+    return { text, where };
+  }
+
+  // Up to three finished scenes worth replaying: the most points left on the table first,
+  // then the biggest total profile gap. Replays are practice and never change the record.
+  function replaySuggestions(steps) {
+    const best = maxPoints();
+    return steps.filter((st) => st.c && st.a?.done)
+      .map((st) => {
+        const top = Math.max(...st.s.choices.map((c) => pointsFor(c.rating)));
+        const lost = top - pointsFor(st.c.rating);
+        const gap = dimensions().reduce((n, d) => {
+          if (!st.s.choices.some((c) => Number.isInteger(c.scores?.[d.id]))) return n;
+          return n + Math.max(...st.s.choices.map((c) => c.scores?.[d.id] ?? 0)) - (st.c.scores?.[d.id] ?? 0);
+        }, 0);
+        const better = st.s.choices.filter((c) => pointsFor(c.rating) === top).length;
+        return { st, lost, gap, better, top };
+      })
+      .filter((r) => r.lost > 0)
+      .sort((a, b) => b.lost - a.lost || b.gap - a.gap || a.st.i - b.st.i)
+      .slice(0, 3)
+      .map((r) => ({ ...r, reason: `You chose a ${ratingLabel(r.st.c.rating)} option (${pointsText(r.st.c.rating)}). ${r.better === 1 ? "One choice here" : `${r.better} choices here`} ${r.top === best ? "transfer well" : "earn more"} (${plural(r.top, "point")}).` }));
+  }
+
+  function resultsHtml(score, counts, steps, allDone) {
+    const type = allDone ? writerTypeFor(score) : null;
+    const replays = allDone ? replaySuggestions(steps) : [];
+    const hero = type ? `
+      <div class="results-hero drop-in">
+        <p class="note-title">Your writer type</p>
+        <p class="writer-type">${esc(type.label)}</p>
+        <p>${esc(type.summary)}</p>
+        ${type.next ? `<p class="try-next"><strong>Try next:</strong> ${esc(type.next)}</p>` : ""}
+        <p class="hint">Based on the profile below. It describes this playthrough, not you, and it isn't a grade.</p>
+      </div>` : allDone ? "" : `<p class="hint">Finish your path to see your writer type and replay suggestions.</p>`;
+    const replayHtml = !allDone ? "" : `
+      <div class="replays">
+        <h3 class="small-h">Scenes to replay</h3>
+        ${replays.length ? `
+          <p class="hint">Practice replays let you try a different choice and read its feedback. Your recorded choice, score, and profile don't change.</p>
+          <ul class="replay-list">${replays.map((r) => `
+            <li class="replay">
+              <span class="scene-icon small ${isConsequence(r.st.s) ? "is-consequence" : ""}">${sceneIcon(r.st.s)}</span>
+              <div class="replay-body">
+                <p class="finish-title"><span class="label-sm">${esc(stageName(r.st.s))}</span> ${esc(r.st.s.title)}</p>
+                <p class="hint">${esc(r.reason)}</p>
+                <button type="button" class="btn small" data-practice="${esc(r.st.s.id)}">Practice replay<span class="visually-hidden">: ${esc(r.st.s.title)}</span></button>
+              </div>
+            </li>`).join("")}</ul>`
+          : `<p class="hint">Every choice you made earned the most points available in its scene. You can still practice any scene from the path below, or start over to reach scenes you didn't see.</p>`}
+      </div>`;
+    return `${hero}${scoreBlockHtml(score, counts, { steps, animate: true })}${replayHtml}`;
+  }
+
   function renderFinish() {
     const { steps, notTaken } = pathModel();
     const counts = ratingCounts(steps);
@@ -787,7 +888,7 @@
         : `<li class="led">↳ Showed up later in <strong>${esc(l.step.s.stage)}</strong></li>`).join("");
       return `
         <li class="path-node ${conseq ? "is-consequence" : ""} ${c ? `node-${esc(c.rating)}` : "node-open"}">
-          <span class="path-dot" aria-hidden="true"></span>
+          <span class="path-dot" aria-hidden="true">${sceneIcon(s)}</span>
           <div class="path-body">
             <p class="eyebrow">${n + 1}. <span class="stage-tag ${conseq ? "consequence-tag" : ""}">${conseq ? "Consequence" : esc(s.stage)}</span></p>
             <p class="finish-title">${esc(s.title)}</p>
@@ -797,7 +898,8 @@
             ${led ? `<ul class="led-list">${led}</ul>` : ""}
             <div class="finish-side">
               ${c ? `<span class="pill rating-${esc(c.rating)}">${esc(ratingLabel(c.rating))}${a?.done ? ` · ${esc(pointsText(c.rating))}` : ""}</span>` : ""}
-              ${a?.done ? `<button type="button" class="btn small ghost" data-explore="${esc(s.id)}">Explore other choices</button>` : ""}
+              ${a?.done ? `<button type="button" class="btn small ghost" data-explore="${esc(s.id)}">Explore other choices</button>
+                <button type="button" class="btn small ghost" data-practice="${esc(s.id)}">Practice replay</button>` : ""}
             </div>
           </div>
         </li>`;
@@ -813,12 +915,12 @@
     const allDone = firstIncompleteIndex(0) === -1;
     app.innerHTML = `
       <section class="card">
-        <p class="eyebrow">${allDone ? "Finished" : "In progress"}</p>
-        <h2>${allDone ? `Your path, ${esc(state.name || "writer")}` : "Your path so far"}</h2>
+        <p class="eyebrow">${allDone ? "Your results" : "In progress"}</p>
+        <h2>${allDone ? `How you played, ${esc(state.name || "writer")}` : "Your path so far"}</h2>
         <p>${allDone
-          ? `You went through ${plural(steps.length, "scene")}. Each one below shows what you chose and where that choice showed up later. Choices stay locked, but you can explore the options you didn't pick. When you're ready, export your path and reflections to submit.`
+          ? `You went through ${plural(steps.length, "scene")}. Here's what your choices add up to, what each pattern suggests for next time, and which scenes are worth another look. Choices stay locked, but you can explore or practice the options you didn't pick. When you're ready, export your results and reflections to submit.`
           : "You haven't finished your path yet."}</p>
-        ${scoreBlockHtml(scoreModel(steps), counts)}
+        ${resultsHtml(scoreModel(steps), counts, steps, allDone)}
         <h3 class="small-h">The path you took</h3>
         <ol class="path" aria-label="The path you took">${nodes}</ol>
         ${allDone && roads ? `
@@ -844,6 +946,46 @@
       </section>`;
 
     app.querySelectorAll("[data-explore]").forEach((b) => b.addEventListener("click", () => setView({ name: "explore", sid: b.dataset.explore })));
+    app.querySelectorAll("[data-practice]").forEach((b) => b.addEventListener("click", () => setView({ name: "practice", sid: b.dataset.practice })));
+  }
+
+  // Practice replay: the scene as the player saw it, any choice, instant feedback.
+  // Nothing here is saved, so the recorded choice, points and profile stay as they were.
+  function renderPractice(sid) {
+    const idx = data.scenarios.findIndex((x) => x.id === sid);
+    if (idx === -1 || !state.answers[sid]?.done) return setView({ name: "finish" });
+    const s = sceneView(idx);
+    const mine = state.answers[sid].choiceId;
+    const conseq = isConsequence(s);
+    app.innerHTML = `
+      <article class="card scenario enter ${conseq ? "is-consequence" : ""}">
+        <p class="practice-banner">Practice replay. Your recorded choice, score, and profile don't change.</p>
+        <div class="scene-head">
+          <span class="scene-icon ${conseq ? "is-consequence" : ""}">${sceneIcon(s)}</span>
+          <div>
+            <p class="eyebrow"><span class="stage-tag ${conseq ? "consequence-tag" : ""}">${esc(stageName(s))}</span></p>
+            <h2 class="scenario-title">${esc(s.title)}</h2>
+          </div>
+        </div>
+        ${setupHtml(s)}
+        <p class="situation">${esc(s.situation)}</p>
+        <fieldset class="choices">
+          <legend>What would you do this time?</legend>
+          ${s.choices.map((c, i) => `
+            <label class="choice">
+              <input type="radio" name="practice" value="${esc(c.id)}">
+              <span class="choice-letter" aria-hidden="true">${String.fromCharCode(65 + i)}</span>
+              <span class="choice-text">${esc(c.text)}${c.id === mine ? ' <span class="mine-tag">Your recorded choice</span>' : ""}</span>
+            </label>`).join("")}
+        </fieldset>
+        <div id="practice-feedback" aria-live="polite"></div>
+        <div class="btn-row"><button type="button" class="btn primary" data-action="to-finish">Back to your results</button></div>
+      </article>`;
+    app.querySelectorAll('input[name="practice"]').forEach((r) => r.addEventListener("change", () => {
+      app.querySelectorAll(".choice").forEach((l) => l.classList.toggle("selected", l.querySelector("input").checked));
+      const c = choiceOf(s, r.value);
+      $("#practice-feedback").innerHTML = `<section class="feedback sticky-note drop-in" aria-label="Feedback on this practice choice">${feedbackHtml(c)}</section>`;
+    }));
   }
 
   function renderExplore(sid) {
@@ -870,7 +1012,7 @@
         <p class="situation">${esc(s.situation)}</p>
         <p class="hint">Reading these doesn't change your recorded choice.</p>
         <div class="explore-list">${items}</div>
-        <div class="btn-row"><button type="button" class="btn primary" data-action="to-finish">Back to your choices</button></div>
+        <div class="btn-row"><button type="button" class="btn primary" data-action="to-finish">Back to your results</button></div>
       </article>`;
   }
 
@@ -904,10 +1046,19 @@
     lines.push("");
     lines.push(`**Points:** ${score.points} of ${score.possible} possible`);
     lines.push("");
+    const allDone = firstIncompleteIndex(0) === -1;
+    const type = allDone ? writerTypeFor(score) : null;
+    if (type) lines.push(`**Writer type:** ${type.label}. ${type.summary}`, "");
     for (const d of score.dims) {
       lines.push(d.pct === null
         ? `- **${d.label}:** not measured on my path`
         : `- **${d.label}:** \`${textBar(d.pct)}\` ${d.pct}% (${d.band}, ${plural(d.scenes, "scene")})`);
+      const tk = allDone ? takeawayFor(d, records) : null;
+      if (tk?.text) lines.push(`  - Takeaway: ${tk.text}${tk.where ? ` (${tk.where.label}: ${tk.where.stage}, ${tk.where.title})` : ""}`);
+    }
+    const replays = allDone ? replaySuggestions(records) : [];
+    if (replays.length) {
+      lines.push("", `**Scenes to replay:** ${replays.map((r) => `${stageName(r.st.s)}, ${r.st.s.title}`).join("; ")}`);
     }
     lines.push("");
     lines.push(`_The profile describes patterns in this playthrough, not a grade._`);
@@ -1017,7 +1168,9 @@
            <strong>Started:</strong> ${esc(formatDate(state.startedAt))}<br>
            <strong>Printed:</strong> ${esc(formatDate(new Date().toISOString()))}<br>
            <strong>Completed:</strong> ${completedCount()} of ${pathLength()} scenes on my path</p>
-        ${scoreBlockHtml(score, ratingCounts(records))}
+        ${(() => { const t = firstIncompleteIndex(0) === -1 ? writerTypeFor(score) : null;
+          return t ? `<p><strong>Writer type:</strong> ${esc(t.label)}. ${esc(t.summary)}</p>` : ""; })()}
+        ${scoreBlockHtml(score, ratingCounts(records), { steps: firstIncompleteIndex(0) === -1 ? records : null })}
         ${recs}
         ${roads}
       </section>`;
