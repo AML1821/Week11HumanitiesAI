@@ -1,0 +1,37 @@
+{
+  "title": "Generative AI Policy Statement",
+  "summary": [
+    "The question isn't whether AI is good or bad. It's what kind of relationship with it will serve you best as a developing writer and thinker.",
+    "In ENC 1102 you're expected to make informed decisions about when and how to use AI, document those decisions honestly in your GenAI log, and reflect on how they shaped your work.",
+    "Choosing not to use AI is never penalized. Every required component can be completed without it."
+  ],
+  "logQuestions": [
+    "What did you ask AI to do?",
+    "What did it produce?",
+    "What did you keep, change, or discard, and why?",
+    "What did the interaction reveal about how AI processes language compared to how you do?",
+    "Would the piece be meaningfully different if you had not used it, and in what way?"
+  ],
+  "ratings": {
+    "transfers": { "label": "Transfers well", "description": "Builds knowledge and habits that travel with you into new writing situations." },
+    "works": { "label": "Works", "description": "A reasonable choice that gets the job done, though it may leave some learning on the table." },
+    "shortcut": { "label": "Shortcut", "description": "Saves time now at a cost to your learning, your accuracy, or your honesty about the process." },
+    "line": { "label": "Crosses a line", "description": "Conflicts with the course policy as written." }
+  },
+  "points": { "transfers": 3, "works": 2, "shortcut": 1, "line": 0 },
+  "dimensions": [
+    { "id": "ownership", "label": "Ownership of ideas", "description": "The topic, claims, words, and judgments in your work came from your own thinking." },
+    { "id": "verification", "label": "Verification", "description": "You checked facts and sources yourself instead of trusting what AI handed you." },
+    { "id": "disclosure", "label": "Honest disclosure", "description": "You were open about how you used AI (or chose not to), through your GenAI log." }
+  ],
+  "fullText": [
+    "Generative AI refers to any tool that uses predictive modeling to produce text, images, code, audio, or other content in response to a prompt. ChatGPT, Claude, Gemini, Copilot, and the writing assistants embedded in many platforms all fall into this category. These systems were built on massive collections of human-generated writing, art, and code, much of it gathered without the knowledge or permission of the people who created it. Human workers, often underpaid and working in difficult conditions, labeled and filtered the data that makes these outputs possible. The computing infrastructure that runs these models carries a measurable environmental cost. This course will not ask you to solve any of those problems, but it will ask you to hold them in mind as part of what it means to use these tools with awareness.",
+    "This course is organized around a reflective framework (such as Teaching for Transfer (TFT)), which means the central question is not just whether you can complete an assignment but whether you are building knowledge and habits that travel with you into new situations. That framework shapes everything about how AI is treated here. The question this policy is designed to answer is not whether AI is good or bad but what kind of relationship with it will serve you best as a developing writer and thinker. The answer this course proposes is critical, reflective, and honest engagement, the practiced capacity to make your own judgments about when AI is useful, when it is not, and what it cannot do that you must do for yourself.",
+    "Every AI interaction that touches any assignment in this course must be documented in your GenAI log. This is not a punishment or a surveillance mechanism. It is a structured practice of the metacognitive reflection that this framework identifies as central to transfer. Each entry answers five questions: What did you ask AI to do? What did it produce? What did you keep, change, or discard, and why? What did the interaction reveal about how AI processes language compared to how you do? Would the piece be meaningfully different if you had not used it, and in what way? Submitting AI-generated writing as your own without a corresponding log entry is a violation of UCF's Golden Rule Student Conduct academic integrity policy. The log is your disclosure mechanism for this course. No separate citation format is required for AI interactions, but the entry must be complete and honest.",
+    "AI use in ENC 1101 is scaffolded and intentional. The required AI activities are structured so that you can use these tools as objects of study before you use them as production shortcuts. Your own voice and your own thinking come first and foremost. AI is introduced as something to examine, not something to lean on. By the time you reach ENC 1102, you will have a foundation. AI use there is more open-ended and asks more of you rhetorically. You are expected to make informed decisions about when and how to use these tools, document those decisions honestly, and reflect on how they shaped your work.",
+    "AI-generated content sits in contested legal territory. For this reason, the outputs these tools produce do not carry copyright protection in the traditional sense, but the underlying training data often does. When you use AI in your writing, you are responsible for what it produces, including verifying that it has not reproduced recognizable copyrighted material and that the ideas you submit reflect your own thinking. Your GenAI log documents that responsibility.",
+    "Every required AI activity in this course is designed around tools available at no cost. No assignment assumes access to a paid subscription. If limited access, cost, or unfamiliarity with these tools creates a barrier to your participation, bring that to me directly early on. We will find a path forward that does not put you at a disadvantage. If you use AI-assisted technology as part of a documented accessibility accommodation, that use is governed by your accommodation agreement and is not subject to the restrictions above. Connect with UCF Student Accessibility Services (SAS) and let me know so we can make sure this policy works for you rather than against you.",
+    "Students who choose not to use generative AI tools for personal, ethical, or philosophical reasons will not be penalized. The course is designed so that every required component can be completed without AI use. If you make that choice, document it in your GenAI log and reflect on what the decision reveals about your thinking. That reflection is itself the kind of metacognitive work this course values.",
+    "A reflective framework asks you to build knowledge that transfers, and transfer requires real engagement, not just exposure to rules. Some of the most valuable learning in this course will happen in low-stakes tasks where you are trying something out, getting a result, and having to figure out what it means. This policy is designed to leave room for that process. You are encouraged to push these tools, question their outputs, and bring your findings back into the classroom conversation. Get ready for that conversation."
+  ]
+}
