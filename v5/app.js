@@ -187,6 +187,7 @@
           errors.push(`${where} is a consequence scene and needs "trigger": { "anyFlags": [...] }.`);
         }
       }
+      if (s.discussion !== undefined && !isStringList(s.discussion)) errors.push(`${where} has "discussion" that isn't a list of questions.`);
       if (s.echoes !== undefined) {
         if (!Array.isArray(s.echoes)) errors.push(`${where} has "echoes" that isn't a list.`);
         else s.echoes.forEach((e, k) => {
