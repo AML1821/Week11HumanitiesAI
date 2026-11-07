@@ -127,6 +127,8 @@ main { width: 100%; max-width: 760px; margin: 0 auto; padding: 0 16px; outline: 
 
 h1 { font-size: 2rem; line-height: 1.15; margin: 0 0 10px; }
 h2 { font-size: 1.45rem; line-height: 1.25; margin: 0 0 12px; }
+/* Scene, results, explore, print and error views use an h1 that looks like the old h2. */
+h1.scenario-title, h1.view-title { font-size: 1.45rem; line-height: 1.25; margin: 0 0 12px; }
 .small-h { font-size: 1.05rem; margin: 18px 0 6px; }
 p { margin: 0 0 12px; }
 .lede { font-size: 1.05rem; }
@@ -313,7 +315,7 @@ dialog::backdrop { background: rgba(0, 0, 0, .45); }
 
 /* ---------- print ---------- */
 .print-item { padding: 12px 0; border-top: 1px solid var(--rule); }
-.print-item h3 { margin: 0 0 8px; font-size: 1.1rem; }
+.print-item h2 { margin: 0 0 8px; font-size: 1.1rem; }
 .print-item dt { font-weight: 700; margin-top: 6px; }
 .print-item dd { margin: 2px 0 6px 0; }
 

@@ -381,7 +381,7 @@
         <h1>Should I Use AI Here?</h1>
         <p class="lede">You'll face ${data.scenarios.filter((s) => !isConsequence(s)).length} real moments from a writing course. For each one, decide whether and how you'd use generative AI, explain why, and see how your choice plays out against the course policy.</p>
         <ul class="stage-list" aria-label="Stages">${stages}</ul>
-        <p class="new-note"><strong>New in version 4:</strong> meet the classmates who share these moments with you, follow your path on a scene-by-scene progress bar, and finish with a results page: your writer type, a takeaway for each pattern, and scenes worth replaying for practice. Scoring works the same as version 3.</p>
+        <p class="new-note"><strong>New in version 5:</strong> your export now also works in your instructor's teacher view, which summarizes the class's results right in their browser. Play and scoring work the same as version 4.</p>
         <div class="sticky-note">
           <p class="note-title">From the course policy</p>
           ${summary}
@@ -456,7 +456,7 @@
           <span class="scene-icon ${cause ? "is-consequence" : ""}">${sceneIcon(s)}</span>
           <div>
             <p class="eyebrow"><span class="stage-tag ${cause ? "consequence-tag" : ""}">${cause ? "Consequence" : esc(s.stage)}</span></p>
-            <h2 class="scenario-title">${esc(s.title)}</h2>
+            <h1 class="scenario-title">${esc(s.title)}</h1>
           </div>
         </div>
         ${setupHtml(s)}
@@ -761,13 +761,13 @@
     }).join("");
     return `
       <div class="score-block">
-        <h3 class="small-h">Your score</h3>
+        <h2 class="small-h">Your score</h2>
         <p class="score-total"><strong>${score.points}</strong> of ${plural(score.possible, "possible point")}
           <span class="hint">(${plural(score.scenes, "scene")} finished; ${plural(maxPoints(), "point")} for a choice that transfers well)</span></p>
         <ul class="tally" aria-label="Your choices by rating">
           ${RATINGS.map((r) => `<li class="pill rating-${r}">${esc(ratingLabel(r))}: ${counts[r]}</li>`).join("")}
         </ul>
-        <h3 class="small-h">Your profile</h3>
+        <h2 class="small-h">Your profile</h2>
         <ul class="profile-chart" aria-label="Your profile across three patterns">${rows}</ul>
         <p class="hint profile-note">This profile describes patterns in the choices you made in this playthrough. It isn't a grade. Each bar compares your choices with the best and weakest choices available in the scenes you played, so paths of different lengths compare fairly. Not using AI is never penalized: every choice without AI earns full points. The profile reflects what a choice did (for example, whether you re-checked your sources), not whether AI was involved.</p>
       </div>`;
@@ -860,7 +860,7 @@
       </div>` : allDone ? "" : `<p class="hint">Finish your path to see your writer type and replay suggestions.</p>`;
     const replayHtml = !allDone ? "" : `
       <div class="replays">
-        <h3 class="small-h">Scenes to replay</h3>
+        <h2 class="small-h">Scenes to replay</h2>
         ${replays.length ? `
           <p class="hint">Practice replays let you try a different choice and read its feedback. Your recorded choice, score, and profile don't change.</p>
           <ul class="replay-list">${replays.map((r) => `
@@ -916,16 +916,16 @@
     app.innerHTML = `
       <section class="card">
         <p class="eyebrow">${allDone ? "Your results" : "In progress"}</p>
-        <h2>${allDone ? `How you played, ${esc(state.name || "writer")}` : "Your path so far"}</h2>
+        <h1 class="view-title">${allDone ? `How you played, ${esc(state.name || "writer")}` : "Your path so far"}</h1>
         <p>${allDone
           ? `You went through ${plural(steps.length, "scene")}. Here's what your choices add up to, what each pattern suggests for next time, and which scenes are worth another look. Choices stay locked, but you can explore or practice the options you didn't pick. When you're ready, export your results and reflections to submit.`
           : "You haven't finished your path yet."}</p>
         ${resultsHtml(scoreModel(steps), counts, steps, allDone)}
-        <h3 class="small-h">The path you took</h3>
+        <h2 class="small-h">The path you took</h2>
         <ol class="path" aria-label="The path you took">${nodes}</ol>
         ${allDone && roads ? `
           <div class="roads">
-            <h3 class="small-h">Roads not taken</h3>
+            <h2 class="small-h">Roads not taken</h2>
             <p class="hint">Consequence scenes you never reached, and the choices that would have led to them.</p>
             <ul class="road-list">${roads}</ul>
           </div>` : ""}
@@ -964,7 +964,7 @@
           <span class="scene-icon ${conseq ? "is-consequence" : ""}">${sceneIcon(s)}</span>
           <div>
             <p class="eyebrow"><span class="stage-tag ${conseq ? "consequence-tag" : ""}">${esc(stageName(s))}</span></p>
-            <h2 class="scenario-title">${esc(s.title)}</h2>
+            <h1 class="scenario-title">${esc(s.title)}</h1>
           </div>
         </div>
         ${setupHtml(s)}
@@ -1008,7 +1008,7 @@
     app.innerHTML = `
       <article class="card">
         <p class="eyebrow"><span class="stage-tag ${isConsequence(s) ? "consequence-tag" : ""}">${esc(stageName(s))}</span> · Exploring</p>
-        <h2>${esc(s.title)}</h2>
+        <h1 class="view-title">${esc(s.title)}</h1>
         <p class="situation">${esc(s.situation)}</p>
         <p class="hint">Reading these doesn't change your recorded choice.</p>
         <div class="explore-list">${items}</div>
@@ -1140,7 +1140,7 @@
     const { records, notTaken, score } = buildRecords();
     const recs = records.map(({ n, s, a, c, log, cause, echo }) => `
       <section class="print-item">
-        <h3>${n}. ${esc(stageName(s))}: ${esc(s.title)}</h3>
+        <h2>${n}. ${esc(stageName(s))}: ${esc(s.title)}</h2>
         ${cause ? `<p class="cause small">This scene happened because in ${esc(cause.scene.stage)} I chose: <q>${esc(cause.choice.text)}</q></p>` : ""}
         ${echo ? `<p class="cause small">My earlier ${esc(echo.scene.stage)} choice showed up here: ${esc(echo.text)}</p>` : ""}
         ${!c || !a?.locked ? `<p><em>Not answered yet.</em></p>` : `
@@ -1153,7 +1153,7 @@
       </section>`).join("");
     const roads = notTaken.length && firstIncompleteIndex(0) === -1 ? `
       <section class="print-item">
-        <h3>Roads not taken</h3>
+        <h2>Roads not taken</h2>
         <ul>${notTaken.map(({ s, triggers }) => `<li><strong>${esc(s.title)}</strong> would have appeared if I had chosen: ${triggers.map((t) => `${esc(t.scene.stage)}: <q>${esc(t.choice.text)}</q>`).join("; or ")}</li>`).join("")}</ul>
       </section>` : "";
 
@@ -1163,7 +1163,7 @@
           <button type="button" class="btn primary" data-action="print">Print / Save as PDF</button>
           <button type="button" class="btn ghost" data-action="to-finish">Back</button>
         </div>
-        <h2>Should I Use AI Here? (v5)</h2>
+        <h1 class="view-title">Should I Use AI Here? (v5)</h1>
         <p><strong>Name:</strong> ${esc(state.name || "(not given)")}<br>
            <strong>Started:</strong> ${esc(formatDate(state.startedAt))}<br>
            <strong>Printed:</strong> ${esc(formatDate(new Date().toISOString()))}<br>
@@ -1227,7 +1227,7 @@
   function showError(title, items) {
     app.innerHTML = `
       <section class="card error-card" role="alert">
-        <h2>${esc(title)}</h2>
+        <h1 class="view-title">${esc(title)}</h1>
         ${items.length ? `<ul>${items.map((x) => `<li>${esc(x)}</li>`).join("")}</ul>` : ""}
         <p class="hint">If you're running this from your computer, open it through a local web server (for example <code>python3 -m http.server</code>) rather than double-clicking the file.</p>
       </section>`;
