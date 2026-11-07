@@ -931,7 +931,7 @@
           </div>` : ""}
         <div class="export-box sticky-note">
           <p class="note-title">Export your work</p>
-          <p>Your work lives only in this browser. Download or copy it to submit on Webcourses, or save it as a PDF.</p>
+          <p>Your work lives only in this browser. Download or copy it to submit on Webcourses, or save it as a PDF. The download and copied text also work in your instructor's teacher view.</p>
           <div class="btn-row wrap">
             <button type="button" class="btn primary" data-action="download">Download (.md)</button>
             <button type="button" class="btn" data-action="copy">Copy text</button>
@@ -1092,7 +1092,34 @@
       }
       lines.push("");
     }
+    lines.push(dataComment(records, score, type));
     return lines.join("\n");
+  }
+
+  // v5: a single HTML comment at the end of the export with the same results in a form the
+  // teacher view can read. It only copies values scoreModel(), writerTypeFor() and pathModel()
+  // already computed; nothing here scores anything. ">" is escaped so "-->" can't end it early.
+  const DATA_TAG = "should-i-use-ai:data";
+  function dataComment(records, score, type) {
+    const payload = {
+      v: VERSION,
+      name: state.name || "",
+      startedAt: state.startedAt,
+      exportedAt: new Date().toISOString(),
+      complete: firstIncompleteIndex(0) === -1,
+      points: score.points,
+      possible: score.possible,
+      writerType: type ? type.id : null,
+      dims: score.dims.map((d) => ({ id: d.id, pct: d.pct, band: d.band, scenes: d.scenes })),
+      path: records.map(({ s, a, c }) => ({
+        sceneId: s.id,
+        choiceId: c && a?.locked ? c.id : null,
+        rating: c && a?.locked ? c.rating : null,
+        points: c && a?.done ? pointsFor(c.rating) : null,
+        done: !!a?.done,
+      })),
+    };
+    return `<!-- ${DATA_TAG} ${JSON.stringify(payload).replace(/>/g, "\\u003e")} -->`;
   }
 
   function slug(s) {
