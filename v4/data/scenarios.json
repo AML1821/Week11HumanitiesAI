@@ -6,6 +6,12 @@
       "type": "core",
       "stage": "Brainstorming",
       "title": "A blank page and a broad prompt",
+      "icon": "lightbulb",
+      "character": {
+        "name": "Maya",
+        "role": "your roommate"
+      },
+      "setup": "Maya is cross-legged on her bed with a bowl of instant ramen, laptop balanced on one knee. She glances over at your empty document and grins. \"Still nothing?\"",
       "assignment": "Unit 2: Research-based argument on a question that matters to a community you belong to",
       "situation": "The prompt is wide open, and you have no idea what to write about. Your roommate says they just asked ChatGPT for topic ideas and picked one in five minutes. Your proposal is due Friday.",
       "learningGoal": "Finding a question you actually care about, which is what keeps a long research project going.",
@@ -88,6 +94,12 @@
       "type": "core",
       "stage": "Research",
       "title": "You need six credible sources",
+      "icon": "books",
+      "character": {
+        "name": "Luis",
+        "role": "your classmate"
+      },
+      "setup": "The third floor of the library smells like old carpet and printer toner. Luis drops into the chair across from you, unzips his backpack, and asks how many sources you have so far. You hold up zero fingers.",
       "assignment": "Unit 2: Annotated bibliography (6 sources, at least 3 peer-reviewed)",
       "situation": "You've settled on a question about food insecurity among college students. The library databases feel overwhelming, and you've heard AI can just give you a list of sources.",
       "variants": [
@@ -193,6 +205,12 @@
       "type": "core",
       "stage": "Drafting",
       "title": "11 p.m., no introduction",
+      "icon": "moon",
+      "character": {
+        "name": "Maya",
+        "role": "your roommate"
+      },
+      "setup": "The desk lamp is the only light in the room. Maya is already asleep, one arm hanging off her bed, and your cold coffee has a skin on top. Your eyes keep drifting to the top of the screen.",
       "assignment": "Unit 2: Full draft of the research-based argument (due at 9 a.m.)",
       "situation": "Your body paragraphs are rough but written. The intro has been a blinking cursor for an hour. A chatbot tab is open.",
       "learningGoal": "Learning how openings work so you can write one for any audience, not just this one.",
@@ -279,6 +297,12 @@
       "type": "core",
       "stage": "Citations",
       "title": "Formatting the works cited page",
+      "icon": "list",
+      "character": {
+        "name": "Priya",
+        "role": "your study-group friend"
+      },
+      "setup": "Priya slides a granola bar across the table in the student union and taps her phone to show you the time. \"Clock's ticking,\" she says. Your sources are spread across six open tabs and a crumpled sticky note.",
       "assignment": "Unit 2: Final draft with MLA works cited",
       "situation": "You have eight sources and an hour before the deadline. You also used a chatbot earlier to help brainstorm counterarguments, and you're not sure how to account for that.",
       "learningGoal": "Accurate attribution, so readers can find your sources and see where ideas came from.",
@@ -371,6 +395,12 @@
       "type": "consequence",
       "stage": "Consequence",
       "title": "The source that wasn't there",
+      "icon": "alert",
+      "character": {
+        "name": "Priya",
+        "role": "your study-group friend"
+      },
+      "setup": "Your phone buzzes during lunch with a new email from your instructor. Priya watches your face change and sets down her sandwich. \"Everything okay?\" she asks, leaning in to read over your shoulder.",
       "trigger": {
         "anyFlags": [
           "unverified-sources",
@@ -451,6 +481,12 @@
       "type": "core",
       "stage": "Peer review",
       "title": "Reviewing a classmate's draft",
+      "icon": "people",
+      "character": {
+        "name": "Jordan",
+        "role": "your peer-review partner"
+      },
+      "setup": "Jordan pushes a stapled draft across the desk, pages a little curled from the walk to class. \"Be honest,\" they say, half-laughing, and pull out a pen to start on yours while you flip to page one.",
       "assignment": "Unit 2: Peer review workshop (written comments on one classmate's draft)",
       "situation": "Your partner's draft is long, and you're not sure what to say beyond \"good job.\" You know AI could produce detailed feedback in seconds.",
       "learningGoal": "Learning to read critically as a writer, which is also how you learn to revise your own work.",
@@ -526,13 +562,13 @@
           "ifFlags": [
             "ai-topic"
           ],
-          "text": "Your partner has already read your draft, and their first question is \"Why do you care about this?\" You realize you don't have a ready answer."
+          "text": "Jordan has already read your draft, and their first question is \"Why do you care about this?\" You realize you don't have a ready answer."
         },
         {
           "ifFlags": [
             "own-topic"
           ],
-          "text": "Your partner has already read your draft. They tell you they've lived this too, and they want to know more about what you saw."
+          "text": "Jordan has already read your draft. They tell you they've lived this too, and they want to know more about what you saw."
         }
       ]
     },
@@ -541,6 +577,12 @@
       "type": "consequence",
       "stage": "Consequence",
       "title": "Pitch it in two minutes",
+      "icon": "mic",
+      "character": {
+        "name": "Luis",
+        "role": "your classmate"
+      },
+      "setup": "After class, Luis catches up with you in the hallway and gives you a quick fist bump. \"Showcase? That's huge,\" he says. You picture the lecture hall full of faces, and your stomach does a small flip.",
       "trigger": {
         "anyFlags": [
           "own-topic"
@@ -620,6 +662,12 @@
       "type": "core",
       "stage": "Revising",
       "title": "\"Your argument lacks development\"",
+      "icon": "pencil",
+      "character": {
+        "name": "Priya",
+        "role": "your study-group friend"
+      },
+      "setup": "Your graded draft is open on one side of the screen, the margins crowded with comment bubbles. Priya, curled up at the other end of the couch with her own laptop, asks what your instructor said.",
       "assignment": "Unit 2: Revision after instructor feedback",
       "situation": "Your instructor's comments say several claims need more support and analysis. You have three days. Your word processor now has a built-in \"Rewrite\" button, and a chatbot is a tab away.",
       "learningGoal": "Learning to see where your own reasoning is thin and how to develop it, which is the core skill of revision.",
@@ -712,6 +760,12 @@
       "type": "consequence",
       "stage": "Consequence",
       "title": "The conference",
+      "icon": "chat",
+      "character": {
+        "name": "Jordan",
+        "role": "your peer-review partner"
+      },
+      "setup": "You wait on a bench outside your instructor's office, knee bouncing, your printed draft rolled into a tube. Jordan walks out from their own conference, gives you a small thumbs-up, and mouths \"you got this.\"",
       "trigger": {
         "anyFlags": [
           "undisclosed-intro",
