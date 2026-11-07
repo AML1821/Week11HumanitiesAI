@@ -14,7 +14,7 @@ Each version lives in its own folder and stays playable. The root `index.html` l
 | `v2/` | Consequences: earlier choices show up in later scenes, 3 consequence scenes that appear only on certain paths, and a path timeline end screen |
 | `v3/` | Scoring: points per rating, a profile across ownership of ideas, verification, and honest disclosure, and scene variants (fixes the Research topic and the Pitch slide-deck choice from v2) |
 | `v4/` | Characters and results: a named student and short setup in every scene, scene icons, a step progress bar, small transitions, and a results page with a writer type, a takeaway per pattern, and practice replays (scoring unchanged from v3) |
-| `v5/` | (planned) Teacher mode for adding and editing scenarios |
+| `v5/` | Teacher mode: a teacher view (`v5/teacher.html`) with the game's purpose, scoring and patterns, a class summary from students' exports, and discussion questions per scene; a top-level heading on every game screen (play and scoring unchanged from v4) |
 
 ## How it plays (all versions)
 
@@ -67,13 +67,26 @@ A full playthrough is 6 to 9 scenes depending on your choices.
 - **Scoring is unchanged.** Points, profile bars, and bands are computed exactly as in v3, from the same ratings and scores.
 - The export and print view include your writer type, takeaways, and the scenes to replay.
 
+## What v5 adds: teacher mode
+
+- **A teacher view** at `v5/teacher.html`, linked from the landing page and the game's footer. It has five sections:
+  - *About the game*: what it's for, what students do in each scene, how choices follow them, and what they submit.
+  - *Scoring*: ratings and points, how the profile percentages and bands work, and how a writer type is chosen. All of it is read from `policy.json`, so it stays in step with the game.
+  - *The three patterns*: each pattern's description, the scenes that test it, and the takeaways students read.
+  - *Class results*: choose or drop students' exported `.md` files, or paste text they copied (several at once is fine). You get a roster, writer-type counts, the average profile and band counts per pattern, the hardest scenes and choices, how the class chose in every scene, and a CSV download. Writer types and profiles count finished playthroughs only. Version 4 exports are read from their Markdown, best effort; anything that can't be matched is noted next to that student.
+  - *Discussion questions*: three questions for each scene, with the scene's setup, situation, learning goal, and its choices with ratings and pattern scores.
+- **Privacy.** The teacher view reads files with the browser only and keeps them in memory until the page is closed or reloaded. Nothing is stored or sent, and its Content-Security-Policy blocks connections to anything but its own files.
+- **A results block in the export.** The Markdown download and copied text end with one HTML comment (`<!-- should-i-use-ai:data {...} -->`) holding the scene and choice ids, points, profile, and writer type the game already computed. It's invisible when the Markdown is rendered. The teacher view reads it; it never re-scores anything.
+- **Headings.** Every game screen now has one top-level heading (the scene title, the results title, and so on), styled as before.
+- **Play and scoring are unchanged** from v4.
+
 ## Your data
 
-Progress and reflections are stored in this browser's `localStorage` under a per-version key (`shouldIUseAI.v1` through `shouldIUseAI.v4`), so versions don't overwrite each other. Nothing is sent anywhere. Clearing site data or switching browsers/devices loses progress, so export before you submit.
+Progress and reflections are stored in this browser's `localStorage` under a per-version key (`shouldIUseAI.v1` through `shouldIUseAI.v5`), so versions don't overwrite each other. Nothing is sent anywhere. Clearing site data or switching browsers/devices loses progress, so export before you submit.
 
 ## Editing scenarios
 
-Each version has its own data: `v4/data/scenarios.json` and `v4/data/policy.json` for the current version (earlier versions' are in `v1/data/`, `v2/data/`, and `v3/data/`). Each scene has a stage, assignment, situation, learning goal, reflection prompts, GenAI log questions, and choices. Each choice has `text`, `usesAI`, `rating` (`transfers`, `works`, `shortcut`, or `line`), `feedback`, and an optional `policyLink` and `ethicsNote`.
+Each version has its own data: `v5/data/scenarios.json` and `v5/data/policy.json` for the current version (earlier versions' are in `v1/data/` through `v4/data/`). Each scene has a stage, assignment, situation, learning goal, reflection prompts, GenAI log questions, and choices. Each choice has `text`, `usesAI`, `rating` (`transfers`, `works`, `shortcut`, or `line`), `feedback`, and an optional `policyLink` and `ethicsNote`.
 
 v2 adds three fields for consequences:
 
@@ -95,13 +108,17 @@ v4 adds (all optional, presentation only):
 - `takeaways` on each dimension in `policy.json`: `{ "strong": "...", "mixed": "...", "needs": "..." }`.
 - `writerTypes` in `policy.json`: the label, summary, and "try next" line for `author`, `ownership`, `verification`, `disclosure`, `balancer`, and `deadline`. The rule that picks one is fixed in `app.js` (`writerTypeFor`).
 
+v5 adds (optional, teacher view only):
+
+- `discussion` on a scene: a list of questions for class discussion, shown in the teacher view.
+
 Choices appear in the order they're listed, lettered A to D. In v3 each scene's order is set by hand so the strongest and weakest options don't always land in the same position. Choice ids don't have to follow that order; ids are what saved progress, variants, and exports refer to.
 
 Scenes play in list order. The game checks the file when it loads and shows an error if something is missing. It also warns in the browser console if an echo or trigger names a flag no earlier choice sets, which is usually a typo.
 
 ## Running it
 
-On GitHub Pages: Settings → Pages → Deploy from a branch → choose the branch and the root folder. The landing page is at the site root, with each version in its folder (`/v1/` through `/v4/`).
+On GitHub Pages: Settings → Pages → Deploy from a branch → choose the branch and the root folder. The landing page is at the site root, with each version in its folder (`/v1/` through `/v5/`). The teacher view is at `/v5/teacher.html`.
 
 Locally, `fetch()` needs a web server rather than `file://`:
 

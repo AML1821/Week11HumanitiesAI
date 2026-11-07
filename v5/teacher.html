@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <!-- Everything stays in this browser: scripts, styles and data may only come from this site,
+       and the page can't send anything anywhere (no forms post, no outside connections). -->
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; connect-src 'self'; form-action 'none'; base-uri 'none'; object-src 'none'">
+  <meta name="referrer" content="no-referrer">
+  <title>Teacher View · Should I Use AI Here? (v5)</title>
+  <meta name="description" content="Teacher view for the ENC 1102 decision game: how it works, how it scores, a class summary from students' exports, and discussion questions.">
+  <meta name="color-scheme" content="light dark">
+  <link rel="stylesheet" href="style.css">
+</head>
+<body class="teacher">
+  <header class="topbar">
+    <a class="brand" href="../">Should I Use AI Here?</a>
+    <div class="topbar-actions">
+      <span class="progress">Teacher view</span>
+      <a class="link-btn" href="./">Play the game</a>
+    </div>
+  </header>
+
+  <main id="app" tabindex="-1">
+    <p class="loading">Loading the scenes…</p>
+  </main>
+
+  <div id="announcer" class="visually-hidden" aria-live="polite"></div>
+
+  <footer class="foot">
+    <span>ENC 1102 · v5 · Teacher view. Student files are read in this browser only and never sent anywhere.</span>
+    <span class="foot-links"><a href="./">Play the game</a> · <a href="../">All versions</a></span>
+  </footer>
+
+  <script src="teacher.js"></script>
+</body>
+</html>
