@@ -434,3 +434,64 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
   .profile-track { border: 1px solid CanvasText; }
   .profile-fill { background: Highlight; }
 }
+
+/* ---------- v4: scene icons, step bar, setup ---------- */
+.icon { width: 1em; height: 1em; display: block; }
+.scene-head { display: flex; gap: 12px; align-items: flex-start; }
+.scene-head > div { min-width: 0; }
+.scene-icon {
+  flex: none; width: 46px; height: 46px; border-radius: 50%; margin-top: 2px;
+  display: inline-flex; align-items: center; justify-content: center; font-size: 24px;
+  background: var(--note); color: var(--note-ink); box-shadow: 0 1px 3px var(--note-shadow);
+}
+.scene-icon.is-consequence { background: var(--conseq); color: #fff; }
+@media (prefers-color-scheme: dark) { .scene-icon.is-consequence { color: #1b1a17; } }
+@media (max-width: 420px) { .scene-icon { width: 38px; height: 38px; font-size: 20px; } }
+
+.stepbar { margin: 6px 0 8px; }
+.steps { list-style: none; margin: 0; padding: 0; display: flex; gap: 4px; }
+.step {
+  flex: 1 1 0; min-width: 0; height: 30px; border-radius: 6px;
+  display: flex; align-items: center; justify-content: center; font-size: 16px;
+  background: var(--paper); border: 2px solid var(--paper-edge); color: var(--ink-soft);
+  transition: background-color .3s, border-color .3s, color .3s;
+}
+.step.done { background: var(--accent-bg); border-color: var(--accent-bg); color: var(--accent-ink); }
+.step.current { border-color: var(--accent); color: var(--accent); background: color-mix(in srgb, var(--note) 45%, var(--paper)); }
+.step.is-consequence { border-style: dashed; }
+.step.is-consequence.done { background: var(--conseq); border-color: var(--conseq); color: #fff; }
+@media (prefers-color-scheme: dark) { .step.is-consequence.done { color: #1b1a17; } }
+@media (max-width: 480px) {
+  .step { height: 10px; border-radius: 999px; border-width: 1px; }
+  .step .step-icon { display: none; }
+}
+
+.scene-setup {
+  margin: 14px 0 16px; padding: 12px 14px; border-radius: 4px 14px 4px 4px;
+  background: color-mix(in srgb, var(--rule) 30%, var(--paper)); border-left: 4px solid var(--rule);
+}
+.character { display: flex; align-items: center; gap: 10px; margin: 0 0 6px; font: .95rem/1.3 var(--font-ui); }
+.character .role { color: var(--ink-soft); }
+.avatar {
+  flex: none; width: 34px; height: 34px; border-radius: 50%;
+  display: inline-flex; align-items: center; justify-content: center;
+  font: 700 1rem/1 var(--font-hand); background: var(--accent-bg); color: var(--accent-ink);
+}
+.setup-text { margin: 0; font-style: italic; font-size: 1.05rem; }
+
+/* Small transitions, only when the player hasn't asked for reduced motion. */
+@media (prefers-reduced-motion: no-preference) {
+  .enter { animation: card-in .35s ease-out both; }
+  .drop-in { animation: note-in .4s cubic-bezier(.2, .9, .3, 1.2) both; }
+  .grow { animation: grow-x .9s ease-out both; transform-origin: left center; }
+  .step.current { animation: pulse 1.6s ease-in-out 2; }
+  @keyframes card-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+  @keyframes note-in { from { opacity: 0; transform: translateY(-10px) rotate(-2deg); } to { opacity: 1; transform: rotate(-.4deg); } }
+  @keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+  @keyframes pulse { 50% { box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 25%, transparent); } }
+}
+@media (forced-colors: active) {
+  .step.done, .step.is-consequence.done { background: Highlight; color: HighlightText; }
+  .avatar { border: 1px solid CanvasText; }
+}
+@media print { .stepbar, .scene-icon { display: none; } }

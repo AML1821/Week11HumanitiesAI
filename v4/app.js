@@ -9,7 +9,11 @@
    earlier choice set one of its ifFlags, and a scene with type "consequence" is only
    played when an earlier choice set one of its trigger.anyFlags. Scenes play in array
    order and answers lock in that order, so a scene's flags only ever come from scenes
-   before it and never change after the fact. */
+   before it and never change after the fact.
+
+   v4 adds presentation only: each scene can have an icon, a named character, and a short
+   setup; the end screen becomes a results page (writer type, a takeaway per pattern, and
+   replay suggestions). Scoring is the same as v3. */
 (() => {
   "use strict";
 
@@ -20,6 +24,23 @@
   const PRE_MIN = 8;
   const POST_MIN = 25;
   const RATINGS = ["transfers", "works", "shortcut", "line"];
+
+  // Scene icons: simple stroke SVGs that take the text colour. Always decorative.
+  const ICON_PATHS = {
+    lightbulb: '<path d="M9 18h6M10 21h4"/><path d="M12 3a6 6 0 0 0-3.6 10.8c.6.5 1 1.2 1.1 2V16h5v-.2c.1-.8.5-1.5 1.1-2A6 6 0 0 0 12 3z"/>',
+    books: '<path d="M4 4h4v16H4zM10 4h4v16h-4z"/><path d="M16.5 4.6l3.8-1 3.1 15.4-3.8 1z" transform="translate(-2 1)"/>',
+    moon: '<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>',
+    list: '<path d="M9 6h11M9 12h11M9 18h11"/><path d="M4 6h.01M4 12h.01M4 18h.01" stroke-width="3"/>',
+    alert: '<path d="M12 3 2 20h20L12 3z"/><path d="M12 10v4M12 17h.01"/>',
+    people: '<circle cx="9" cy="8" r="3"/><circle cx="17" cy="9" r="2.5"/><path d="M3 20c0-3.3 2.7-6 6-6s6 2.7 6 6M15 14.5c3 0 6 1.7 6 5.5"/>',
+    mic: '<rect x="9" y="3" width="6" height="11" rx="3"/><path d="M5 11a7 7 0 0 0 14 0M12 18v3M9 21h6"/>',
+    pencil: '<path d="M4 20l4-1L19 8l-3-3L5 16l-1 4z"/><path d="M14 7l3 3"/>',
+    chat: '<path d="M4 5h16v11H9l-5 4V5z"/><path d="M8 9h8M8 12h5"/>',
+    flag: '<path d="M5 21V4M5 4h12l-2 4 2 4H5"/>',
+  };
+  const ICONS = Object.keys(ICON_PATHS).filter((k) => k !== "flag");
+  const iconSvg = (key, cls = "icon") => `<svg class="${cls}" viewBox="0 0 24 24" width="24" height="24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" focusable="false">${ICON_PATHS[key] || ICON_PATHS.flag}</svg>`;
+  const sceneIcon = (s) => iconSvg(s.icon || "flag");
 
   const $ = (sel, root = document) => root.querySelector(sel);
   const app = $("#app");
@@ -151,6 +172,13 @@
         const n = s.choices.filter((c) => c && c.scores && k in c.scores).length;
         if (n && n < s.choices.length) console.warn(`Scene "${s.id}" scores "${k}" on only ${n} of ${s.choices.length} choices; the rest count as 0.`);
       }
+      if (s.icon !== undefined && !ICONS.includes(s.icon)) errors.push(`${where} has icon "${s.icon}"; use one of ${ICONS.join(", ")}.`);
+      if (s.setup !== undefined && (typeof s.setup !== "string" || !s.setup.trim())) errors.push(`${where} has an empty "setup".`);
+      if (s.character !== undefined) {
+        const ch = s.character;
+        if (!ch || typeof ch !== "object" || typeof ch.name !== "string" || !ch.name.trim()) errors.push(`${where} has a "character" without a "name".`);
+        else if (ch.role !== undefined && typeof ch.role !== "string") errors.push(`${where} has a character "role" that isn't text.`);
+      }
       const type = s.type || "core";
       if (!["core", "consequence"].includes(type)) errors.push(`${where} has type "${s.type}"; use "core" or "consequence".`);
       if (type === "consequence") {
@@ -173,6 +201,7 @@
           const vw = `${where}, variant ${k + 1}`;
           if (!v || !isStringList(v.ifFlags) || !v.ifFlags.length) { errors.push(`${vw} needs "ifFlags" (a list).`); return; }
           if (v.situation !== undefined && (typeof v.situation !== "string" || !v.situation.trim())) errors.push(`${vw} has an empty "situation".`);
+          if (v.setup !== undefined && (typeof v.setup !== "string" || !v.setup.trim())) errors.push(`${vw} has an empty "setup".`);
           if (v.choices !== undefined) {
             if (!v.choices || typeof v.choices !== "object" || Array.isArray(v.choices)) { errors.push(`${vw} has "choices" that isn't an object keyed by choice id.`); return; }
             for (const [cid, o] of Object.entries(v.choices)) {
@@ -183,7 +212,7 @@
               }
             }
           }
-          if (v.situation === undefined && v.choices === undefined) errors.push(`${vw} doesn't change anything; give it "situation" or "choices".`);
+          if (v.situation === undefined && v.setup === undefined && v.choices === undefined) errors.push(`${vw} doesn't change anything; give it "situation", "setup", or "choices".`);
         });
       }
     });
@@ -272,6 +301,7 @@
     return {
       ...s,
       situation: v.situation || s.situation,
+      setup: v.setup || s.setup,
       choices: s.choices.map((c) => {
         const o = v.choices?.[c.id];
         return o ? { ...c, text: o.text || c.text, feedback: o.feedback || c.feedback } : c;
@@ -401,13 +431,10 @@
     });
   }
 
-  function renderScenario() {
+  function renderScenario({ animate = true } = {}) {
     if (!scenarioAt(state.currentIndex) || !isActive(state.currentIndex)) return setView({ name: "finish" });
     const s = sceneView(state.currentIndex);
     const a = answerFor(s.id);
-    const total = pathLength();
-    const pos = positionOf(state.currentIndex) - 1;
-    const pct = Math.round((pos / total) * 100);
     const cause = isConsequence(s) ? triggerSource(state.currentIndex) : null;
     const echo = echoFor(state.currentIndex);
 
@@ -422,10 +449,16 @@
     }).join("");
 
     app.innerHTML = `
-      <div class="meter" role="progressbar" aria-label="Progress" aria-valuemin="0" aria-valuemax="${total}" aria-valuenow="${pos}"><span style="width:${pct}%"></span></div>
-      <article class="card scenario ${cause ? "is-consequence" : ""}">
-        <p class="eyebrow"><span class="stage-tag ${cause ? "consequence-tag" : ""}">${cause ? "Consequence" : esc(s.stage)}</span></p>
-        <h2 class="scenario-title">${esc(s.title)}</h2>
+      ${stepBarHtml(state.currentIndex)}
+      <article class="card scenario ${animate ? "enter" : ""} ${cause ? "is-consequence" : ""}">
+        <div class="scene-head">
+          <span class="scene-icon ${cause ? "is-consequence" : ""}">${sceneIcon(s)}</span>
+          <div>
+            <p class="eyebrow"><span class="stage-tag ${cause ? "consequence-tag" : ""}">${cause ? "Consequence" : esc(s.stage)}</span></p>
+            <h2 class="scenario-title">${esc(s.title)}</h2>
+          </div>
+        </div>
+        ${setupHtml(s)}
         ${cause ? causeNoteHtml("This happened because", cause) : ""}
         ${s.assignment ? `<p class="assignment"><strong>Assignment:</strong> ${esc(s.assignment)}</p>` : ""}
         ${echo ? `<aside class="echo-note" aria-label="How an earlier choice shows up here">
@@ -453,6 +486,37 @@
     }
     renderPre(s, a);
     if (a.locked) renderFeedback(s, a);
+  }
+
+  // Segmented progress bar: one segment per scene on the player's path so far.
+  // Consequence scenes join the bar once they're triggered. The segments are decorative;
+  // the progressbar role carries the same information as text.
+  function stepBarHtml(current) {
+    const idx = activeIndexes();
+    const pos = idx.indexOf(current);
+    const s = data.scenarios[current];
+    const segs = idx.map((i, n) => {
+      const sc = data.scenarios[i];
+      const st = n < pos || state.answers[sc.id]?.done ? "done" : n === pos ? "current" : "upcoming";
+      return `<li class="step ${st} ${isConsequence(sc) ? "is-consequence" : ""}" title="${esc(stageName(sc))}">${iconSvg(sc.icon || "flag", "icon step-icon")}</li>`;
+    }).join("");
+    return `
+      <div class="stepbar" role="progressbar" aria-label="Your path" aria-valuemin="1" aria-valuemax="${idx.length}" aria-valuenow="${pos + 1}"
+        aria-valuetext="Scene ${pos + 1} of ${idx.length}: ${esc(stageName(s))}">
+        <ol class="steps" aria-hidden="true">${segs}</ol>
+      </div>`;
+  }
+
+  // The scene opener: a name card for the scene's character and a short setup.
+  function setupHtml(s) {
+    if (!s.setup && !s.character) return "";
+    const ch = s.character;
+    return `
+      <div class="scene-setup">
+        ${ch ? `<p class="character"><span class="avatar" aria-hidden="true">${esc(ch.name.trim().charAt(0).toUpperCase())}</span>
+          <span><strong>${esc(ch.name)}</strong>${ch.role ? `<span class="role">, ${esc(ch.role)}</span>` : ""}</span></p>` : ""}
+        ${s.setup ? `<p class="setup-text">${esc(s.setup)}</p>` : ""}
+      </div>`;
   }
 
   function renderPre(s, a) {
@@ -493,7 +557,7 @@
       a.locked = true;
       a.lockedAt = new Date().toISOString();
       save();
-      renderScenario();
+      renderScenario({ animate: false });
       const c = choiceOf(s, a.choiceId);
       announce(`Feedback: ${ratingLabel(c.rating)}, ${pointsText(c.rating)}.`);
       const fb = $("#feedback-block .feedback");
@@ -546,7 +610,7 @@
          </div>`;
 
     $("#feedback-block").innerHTML = `
-      <section class="feedback sticky-note" aria-label="Feedback on your choice">
+      <section class="feedback sticky-note drop-in" aria-label="Feedback on your choice">
         ${feedbackHtml(c)}
       </section>
       ${reflectHtml}
