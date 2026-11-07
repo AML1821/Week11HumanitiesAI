@@ -533,3 +533,52 @@ q { quotes: "\201C" "\201D"; font-style: italic; }
 /* Keep consequence dots on the timeline; the body's purple edge marks them instead. */
 .path-node.is-consequence { margin-left: 0; }
 .path-node.is-consequence .path-body { margin-left: 8px; }
+
+/* ---------- v5: footer links & teacher view ---------- */
+.foot-links { white-space: nowrap; }
+.teacher-nav { margin: 8px 0 4px; font-family: var(--font-ui); }
+.teacher-nav ul { list-style: none; padding: 0; margin: 0; display: flex; flex-wrap: wrap; gap: 6px; }
+.teacher-nav a {
+  display: inline-block; padding: 8px 12px; border-radius: 999px; border: 1.5px solid var(--paper-edge);
+  background: var(--paper); color: var(--ink); text-decoration: none; font-size: .9rem; font-weight: 600;
+}
+.teacher-nav a:hover { border-color: var(--ink); }
+.teacher-nav a[aria-current="page"] { background: var(--accent-bg); border-color: var(--accent-bg); color: var(--accent-ink); }
+.nav-count { font-weight: 400; }
+.teacher-card a { color: var(--accent); }
+.teacher-list { padding-left: 1.2em; margin: 0 0 14px; }
+.teacher-list li { margin-bottom: 6px; }
+.teacher-list .hint { display: block; }
+.teacher-list .pill { margin-right: 4px; }
+.table-wrap { overflow-x: auto; margin: 8px 0 14px; -webkit-overflow-scrolling: touch; }
+.teacher-table { border-collapse: collapse; width: 100%; font: .9rem/1.4 var(--font-ui); }
+.teacher-table th, .teacher-table td { text-align: left; vertical-align: top; padding: 8px 8px; border-bottom: 1px solid var(--paper-edge); }
+.teacher-table thead th { font-weight: 700; font-size: .8rem; text-transform: uppercase; letter-spacing: .04em; color: var(--ink-soft); }
+.teacher-table td.num { white-space: nowrap; }
+.teacher-table td.num .profile-track { min-width: 80px; }
+.teacher-table .pill { white-space: nowrap; }
+.roster th[scope="row"] { font-weight: 700; }
+.pattern, .discussion-scene { border-top: 1px dashed var(--paper-edge); padding-top: 16px; margin-top: 18px; }
+.discussion-scene h2, .discussion-scene h3, .pattern h2 { font-size: 1.2rem; margin-bottom: 8px; }
+.discussion-scene .setup-text { margin-bottom: 10px; }
+.questions { padding-left: 1.4em; margin: 0 0 12px; }
+.questions li { margin-bottom: 8px; }
+.takeaways { margin: 0 0 8px; }
+.takeaways dt { font: 700 .85rem/1.3 var(--font-ui); margin-top: 8px; }
+.takeaways dd { margin: 2px 0 0; }
+.choices-detail { margin: 8px 0; }
+.choices-detail > summary { cursor: pointer; font: 600 .9rem/1.4 var(--font-ui); color: var(--accent); padding: 6px 0; }
+.loader { margin: 12px 0 20px; }
+.drop-zone {
+  display: flex; flex-wrap: wrap; align-items: center; gap: 10px; padding: 14px; margin: 8px 0 14px;
+  border: 2px dashed var(--note-ink); border-radius: 6px;
+}
+.drop-zone.over { background: var(--paper); }
+.drop-zone label.btn { cursor: pointer; }
+.drop-zone:focus-within label.btn { outline: 3px solid var(--focus); outline-offset: 2px; }
+.loader textarea.ruled { width: 100%; }
+.warn summary { cursor: pointer; color: var(--r-shortcut-ink); }
+.warn ul { margin: 4px 0 0; padding-left: 1.1em; }
+@media print { .teacher-nav, .loader, #csv-btn, #clear-btn, [data-remove] { display: none !important; } }
+.loader textarea.ruled { font: .85rem/var(--line-h) ui-monospace, "SFMono-Regular", Menlo, Consolas, monospace; }
+.drop-zone label.btn { display: inline-flex; align-items: center; flex: 0 0 auto; }
